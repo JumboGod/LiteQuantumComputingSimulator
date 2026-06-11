@@ -8,7 +8,9 @@
 
 - ✅ **M1 核心骨架**：基础设施、单比特门全集 + CX/CZ/CP/SWAP、电路 IR、
   状态向量模拟器、末态测量采样
-- ⬜ M2 完整门集（多控制门、置换门、中间测量、电路绘图）
+- ✅ **M2 完整门集**：统一多控制门模型（任意基门 + n 控制位）、置换门内核、
+  iSWAP/RXX/RYY/RZZ、自定义幺正、中间测量/Reset、compose/inverse/power、
+  ASCII 电路图
 - ⬜ M3 Shor 算法
 - ⬜ M4 Python 绑定与可视化
 - ⬜ M5 性能优化（OpenMP、门融合）

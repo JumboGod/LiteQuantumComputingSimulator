@@ -71,14 +71,34 @@ TEST(Measurement, RejectsUnsupportedCircuits) {
         qc.h(0);
         EXPECT_THROW(StatevectorSimulator().run(qc, 10), std::invalid_argument);
     }
-    {   // 中间测量（测量后还有门）—— M2 才支持
-        QuantumCircuit qc(1, 1);
-        qc.h(0).measure(0, 0).x(0);
-        EXPECT_THROW(StatevectorSimulator().run(qc, 10), std::runtime_error);
-    }
     {   // shots = 0
         QuantumCircuit qc(1, 1);
         qc.measure(0, 0);
         EXPECT_THROW(StatevectorSimulator().run(qc, 0), std::invalid_argument);
     }
+}
+
+TEST(Measurement, GroverFindsMarkedState) {
+    // 3 比特 Grover 搜索 |101>，2 次迭代后理论命中率 ~94.5%
+    const double pi = 3.14159265358979323846;
+    QuantumCircuit qc(3, 3);
+    for (qubit_t q = 0; q < 3; ++q) qc.h(q);
+    for (int iter = 0; iter < 2; ++iter) {
+        qc.x(1);
+        qc.mcp(pi, {0, 1}, 2);  // oracle: 翻转 |101> 相位
+        qc.x(1);
+        for (qubit_t q = 0; q < 3; ++q) qc.h(q);
+        for (qubit_t q = 0; q < 3; ++q) qc.x(q);
+        qc.mcp(pi, {0, 1}, 2);  // 扩散算子
+        for (qubit_t q = 0; q < 3; ++q) qc.x(q);
+        for (qubit_t q = 0; q < 3; ++q) qc.h(q);
+    }
+    qc.measure_all();
+
+    const std::size_t shots = 4096;
+    auto result = seeded(2026).run(qc, shots);
+    const double p101 =
+        static_cast<double>(result.counts().at("101")) / static_cast<double>(shots);
+    EXPECT_GT(p101, 0.90);
+    EXPECT_LT(p101, 0.99);
 }
