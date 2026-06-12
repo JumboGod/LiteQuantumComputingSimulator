@@ -45,7 +45,11 @@ target_include_directories(lqcs PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 target_include_directories(lqcs PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-target_compile_options(lqcs PRIVATE -Wall -Wextra)
+if(MSVC)
+    target_compile_options(lqcs PRIVATE /W4 /permissive-)
+else()
+    target_compile_options(lqcs PRIVATE -Wall -Wextra)
+endif()
 # 静态库可能被链接进 Python 扩展（共享库）
 set_target_properties(lqcs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
@@ -53,6 +57,10 @@ if(LQCS_ENABLE_OPENMP)
     find_package(OpenMP)
     if(OpenMP_CXX_FOUND)
         target_link_libraries(lqcs PUBLIC OpenMP::OpenMP_CXX)
+        if(MSVC)
+            # MSVC 默认 OpenMP 2.0 不接受无符号循环变量；LLVM 模式支持
+            target_compile_options(lqcs PRIVATE /openmp:llvm)
+        endif()
     else()
         message(STATUS "OpenMP not found - building serial kernels")
     endif()

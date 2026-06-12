@@ -11,10 +11,10 @@ TEST(NumberTheory, GcdAndPowMod) {
     EXPECT_EQ(pow_mod(7, 4, 15), 1u);    // 7 的阶是 4 (mod 15)
     EXPECT_EQ(pow_mod(2, 10, 1000), 24u);
     EXPECT_EQ(pow_mod(5, 0, 13), 1u);
-    // 大数不溢出（mul_mod 走 128 位）
-    EXPECT_EQ(pow_mod(0xFFFFFFFFULL, 2, 0xFFFFFFFFFFFFULL),
-              (static_cast<unsigned __int128>(0xFFFFFFFFULL) * 0xFFFFFFFFULL) %
-                  0xFFFFFFFFFFFFULL);
+    // 大数不溢出（mul_mod 用 128 位中间结果或双倍-累加）
+    // 0xFFFFFFFF^2 = 0xFFFFFFFE00000001；对 0xFFFFFFFFFFFF 取模 = 0xFFFE00010000
+    EXPECT_EQ(mul_mod(0xFFFFFFFFULL, 0xFFFFFFFFULL, 0xFFFFFFFFFFFFULL),
+              0xFFFE00010000ULL);
 }
 
 TEST(NumberTheory, Primality) {
