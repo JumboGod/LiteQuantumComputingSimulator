@@ -1,0 +1,21 @@
+[build-system]
+requires = ["scikit-build-core>=0.9"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "pylqcs"
+version = "0.1.0"
+description = "Python bindings for LiteQuantumComputingSimulator (C++ statevector simulator)"
+requires-python = ">=3.9"
+dependencies = ["numpy"]
+
+[project.optional-dependencies]
+visualization = ["matplotlib"]
+
+[tool.scikit-build]
+cmake.args = [
+    "-DLQCS_BUILD_PYTHON=ON",
+    "-DLQCS_BUILD_TESTS=OFF",
+    "-DLQCS_BUILD_EXAMPLES=OFF",
+]
+wheel.packages = ["python/pylqcs"]

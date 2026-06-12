@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string_view>
 #include <vector>
 
 #include "../core/types.hpp"
@@ -25,6 +26,10 @@ public:
 
     double norm() const;
     std::vector<double> probabilities() const;
+
+    // Pauli 串期望值 ⟨ψ|P|ψ⟩。字符串与 Qiskit 一致：最左字符对应
+    // 最高位比特（"ZI" = Z 作用于 qubit 1）。O(2^n)，单遍扫描。
+    double expectation_value(std::string_view pauli) const;
 
 private:
     std::size_t               num_qubits_;

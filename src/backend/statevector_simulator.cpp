@@ -6,8 +6,13 @@
 #include <stdexcept>
 #include <vector>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "lqcs/core/bit_utils.hpp"
 #include "lqcs/core/random.hpp"
+#include "lqcs/transpiler/gate_fusion.hpp"
 #include "kernels/kernels.hpp"
 
 namespace lqcs {
@@ -135,7 +140,10 @@ Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng) 
 
 }  // namespace
 
-Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
+namespace {
+
+// 无融合、无线程设置的纯演化（融合与线程配置由公共入口统一处理）
+Statevector evolve(const QuantumCircuit& circuit) {
     Statevector sv(circuit.num_qubits());
     for (const auto& inst : circuit.instructions()) {
         if (inst.gate.type == GateType::Reset) {
@@ -147,15 +155,35 @@ Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit)
     return sv;
 }
 
+}  // namespace
+
+void StatevectorSimulator::configure_threads() const {
+#ifdef _OPENMP
+    if (options_.num_threads > 0) omp_set_num_threads(options_.num_threads);
+#endif
+}
+
+QuantumCircuit StatevectorSimulator::maybe_fuse(const QuantumCircuit& circuit) const {
+    if (!options_.fuse_gates) return circuit;
+    return SingleQubitGateFusion().run(circuit);
+}
+
+Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
+    configure_threads();
+    return evolve(maybe_fuse(circuit));
+}
+
 Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shots) {
     if (shots == 0) {
         throw std::invalid_argument("run: shots must be >= 1");
     }
+    configure_threads();
+    const QuantumCircuit opt = maybe_fuse(circuit);
 
     // 自动选择执行路径：含 Reset 或「测量后还有门」时走逐 shot 演化
     bool seen_measure = false;
     bool per_shot = false;
-    for (const auto& inst : circuit.instructions()) {
+    for (const auto& inst : opt.instructions()) {
         if (inst.gate.type == GateType::Measure) {
             seen_measure = true;
         } else if (inst.gate.type == GateType::Reset) {
@@ -172,10 +200,10 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
 
     Rng rng(options_.seed);
     if (per_shot) {
-        return run_per_shot(circuit, shots, rng);
+        return run_per_shot(opt, shots, rng);
     }
-    const Statevector sv = run_statevector(circuit);
-    return run_sampling(circuit, shots, sv, rng);
+    const Statevector sv = evolve(opt);
+    return run_sampling(opt, shots, sv, rng);
 }
 
 }  // namespace lqcs

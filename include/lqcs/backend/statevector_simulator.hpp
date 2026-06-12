@@ -15,6 +15,8 @@ class StatevectorSimulator final : public Backend {
 public:
     struct Options {
         std::optional<std::uint64_t> seed;  // 固定种子使采样可复现
+        bool fuse_gates  = true;            // 自动单比特门融合（省全向量扫描）
+        int  num_threads = 0;               // OpenMP 线程数（0 = 默认）
     };
 
     StatevectorSimulator() = default;
@@ -27,6 +29,9 @@ public:
     Statevector run_statevector(const QuantumCircuit& circuit) const;
 
 private:
+    void configure_threads() const;
+    QuantumCircuit maybe_fuse(const QuantumCircuit& circuit) const;
+
     Options options_;
 };
 
