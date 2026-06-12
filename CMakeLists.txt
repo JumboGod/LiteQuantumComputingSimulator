@@ -11,6 +11,7 @@ endif()
 
 option(LQCS_BUILD_TESTS "Build unit tests" ON)
 option(LQCS_BUILD_EXAMPLES "Build examples" ON)
+option(LQCS_BUILD_PYTHON "Build Python bindings (pylqcs)" OFF)
 
 add_library(lqcs STATIC
     src/algorithms/arithmetic.cpp
@@ -36,6 +37,8 @@ target_include_directories(lqcs PUBLIC
 )
 target_include_directories(lqcs PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
 target_compile_options(lqcs PRIVATE -Wall -Wextra)
+# 静态库可能被链接进 Python 扩展（共享库）
+set_target_properties(lqcs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 if(LQCS_BUILD_EXAMPLES)
     add_subdirectory(examples)
@@ -44,4 +47,9 @@ endif()
 if(LQCS_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
+endif()
+
+# python 子目录的 add_test 依赖 enable_testing() 已生效，必须放在其后
+if(LQCS_BUILD_PYTHON)
+    add_subdirectory(python)
 endif()
