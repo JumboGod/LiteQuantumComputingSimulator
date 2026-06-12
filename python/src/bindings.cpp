@@ -185,12 +185,30 @@ PYBIND11_MODULE(_pylqcs, m) {
             return s + "}>";
         });
 
+    // —— 噪声模型（须先于使用其默认值的模拟器注册）——
+    py::class_<KrausChannel>(m, "KrausChannel")
+        .def_static("depolarizing", &KrausChannel::depolarizing, "p"_a)
+        .def_static("amplitude_damping", &KrausChannel::amplitude_damping,
+                    "gamma"_a)
+        .def_static("phase_damping", &KrausChannel::phase_damping, "gamma"_a)
+        .def_static("bit_flip", &KrausChannel::bit_flip, "p"_a)
+        .def_static("phase_flip", &KrausChannel::phase_flip, "p"_a);
+
+    py::class_<NoiseModel>(m, "NoiseModel")
+        .def(py::init<>())
+        .def("add_all_qubit_channel", &NoiseModel::add_all_qubit_channel,
+             py::return_value_policy::reference_internal, "channel"_a)
+        .def("empty", &NoiseModel::empty);
+
     // —— StatevectorSimulator ——
     py::class_<StatevectorSimulator>(m, "StatevectorSimulator")
-        .def(py::init([](std::optional<std::uint64_t> seed) {
-                 return StatevectorSimulator({.seed = seed});
+        .def(py::init([](std::optional<std::uint64_t> seed, bool fuse_gates,
+                         int num_threads, NoiseModel noise) {
+                 return StatevectorSimulator(
+                     {seed, fuse_gates, num_threads, std::move(noise)});
              }),
-             "seed"_a = py::none())
+             "seed"_a = py::none(), "fuse_gates"_a = true, "num_threads"_a = 0,
+             "noise"_a = NoiseModel{})
         .def("run", &StatevectorSimulator::run, "circuit"_a, "shots"_a = 1024,
              py::call_guard<py::gil_scoped_release>())
         .def("run_statevector", &StatevectorSimulator::run_statevector,
@@ -325,21 +343,7 @@ PYBIND11_MODULE(_pylqcs, m) {
     io_mod.def("to_qasm", &io::to_qasm, "circuit"_a);
     io_mod.def("from_qasm", &io::from_qasm, "source"_a);
 
-    // —— 噪声与密度矩阵后端 ——
-    py::class_<KrausChannel>(m, "KrausChannel")
-        .def_static("depolarizing", &KrausChannel::depolarizing, "p"_a)
-        .def_static("amplitude_damping", &KrausChannel::amplitude_damping,
-                    "gamma"_a)
-        .def_static("phase_damping", &KrausChannel::phase_damping, "gamma"_a)
-        .def_static("bit_flip", &KrausChannel::bit_flip, "p"_a)
-        .def_static("phase_flip", &KrausChannel::phase_flip, "p"_a);
-
-    py::class_<NoiseModel>(m, "NoiseModel")
-        .def(py::init<>())
-        .def("add_all_qubit_channel", &NoiseModel::add_all_qubit_channel,
-             py::return_value_policy::reference_internal, "channel"_a)
-        .def("empty", &NoiseModel::empty);
-
+    // —— 密度矩阵后端 ——
     py::class_<DensityMatrix>(m, "DensityMatrix")
         .def(py::init<std::size_t>(), "num_qubits"_a)
         .def("num_qubits", &DensityMatrix::num_qubits)

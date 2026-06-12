@@ -24,6 +24,7 @@ add_executable(lqcs_tests
     test_vqe.cpp
     test_qasm.cpp
     test_density.cpp
+    test_trajectory.cpp
 )
 target_link_libraries(lqcs_tests PRIVATE lqcs GTest::gtest_main)
 target_include_directories(lqcs_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
