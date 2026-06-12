@@ -11,7 +11,9 @@
 - ✅ **M2 完整门集**：统一多控制门模型（任意基门 + n 控制位）、置换门内核、
   iSWAP/RXX/RYY/RZZ、自定义幺正、中间测量/Reset、compose/inverse/power、
   ASCII 电路图
-- ⬜ M3 Shor 算法
+- ✅ **M3 算法库**：Shor 质因数分解（QFT⁻¹ + 受控模幂 + 连分数后处理）、
+  Deutsch-Jozsa、Bernstein-Vazirani、Simon、量子相位估计 QPE、Grover、
+  QFT/oracle 构建器、经典数论工具
 - ⬜ M4 Python 绑定与可视化
 - ⬜ M5 性能优化（OpenMP、门融合）
 - ⬜ M6 进阶能力（VQE、OpenQASM、噪声后端）

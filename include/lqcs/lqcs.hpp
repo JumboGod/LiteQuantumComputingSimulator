@@ -2,6 +2,7 @@
 
 // LiteQuantumComputingSimulator 总入口头文件
 
+#include "algorithms/algorithms.hpp"
 #include "backend/backend.hpp"
 #include "backend/statevector.hpp"
 #include "backend/statevector_simulator.hpp"

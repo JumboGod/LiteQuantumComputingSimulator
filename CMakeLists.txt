@@ -13,6 +13,16 @@ option(LQCS_BUILD_TESTS "Build unit tests" ON)
 option(LQCS_BUILD_EXAMPLES "Build examples" ON)
 
 add_library(lqcs STATIC
+    src/algorithms/arithmetic.cpp
+    src/algorithms/bernstein_vazirani.cpp
+    src/algorithms/deutsch_jozsa.cpp
+    src/algorithms/grover.cpp
+    src/algorithms/number_theory.cpp
+    src/algorithms/oracles.cpp
+    src/algorithms/qft.cpp
+    src/algorithms/qpe.cpp
+    src/algorithms/shor.cpp
+    src/algorithms/simon.cpp
     src/circuit/gate.cpp
     src/circuit/quantum_circuit.cpp
     src/backend/statevector.cpp
