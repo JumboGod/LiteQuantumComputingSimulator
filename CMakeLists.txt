@@ -26,12 +26,17 @@ add_library(lqcs STATIC
     src/algorithms/qpe.cpp
     src/algorithms/shor.cpp
     src/algorithms/simon.cpp
+    src/algorithms/vqe.cpp
     src/circuit/gate.cpp
     src/circuit/quantum_circuit.cpp
     src/transpiler/gate_fusion.cpp
     src/transpiler/redundant_elimination.cpp
+    src/backend/density_matrix.cpp
+    src/backend/density_matrix_simulator.cpp
+    src/backend/noise.cpp
     src/backend/statevector.cpp
     src/backend/statevector_simulator.cpp
+    src/io/qasm.cpp
     src/backend/kernels/gate_kernels.cpp
     src/result/result.cpp
     src/visualization/circuit_drawer.cpp

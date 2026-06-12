@@ -159,6 +159,7 @@ PYBIND11_MODULE(_pylqcs, m) {
                            static_cast<double*>(arr.request().ptr));
                  return arr;
              })
+        .def("expectation_value", &Statevector::expectation_value, "pauli"_a)
         // 零拷贝 numpy 视图：base 持有 Statevector 保证生命周期
         .def("to_numpy", [](py::object self) {
             auto& sv = self.cast<Statevector&>();
@@ -276,6 +277,39 @@ PYBIND11_MODULE(_pylqcs, m) {
         },
         "N"_a, "shots"_a = 64, "max_attempts"_a = 10, "seed"_a = py::none());
 
+    // —— VQE ——
+    py::class_<VQEResult>(alg, "VQEResult")
+        .def_readonly("energy", &VQEResult::energy)
+        .def_readonly("parameters", &VQEResult::parameters)
+        .def_readonly("iterations", &VQEResult::iterations)
+        .def_readonly("history", &VQEResult::history);
+    alg.def(
+        "expectation",
+        [](const Statevector& sv,
+           const std::vector<std::pair<double, std::string>>& terms) {
+            Hamiltonian h;
+            for (const auto& [c, p] : terms) h.push_back({c, p});
+            return expectation(sv, h);
+        },
+        "statevector"_a, "hamiltonian"_a,
+        "<psi|H|psi>, hamiltonian = [(coeff, pauli_str), ...]");
+    alg.def(
+        "vqe",
+        [](const std::vector<std::pair<double, std::string>>& terms,
+           const std::function<QuantumCircuit(std::vector<double>)>& ansatz,
+           std::size_t n_params, std::size_t max_iterations, double tol,
+           std::vector<double> initial_parameters) {
+            Hamiltonian h;
+            for (const auto& [c, p] : terms) h.push_back({c, p});
+            const Ansatz wrapped = [&ansatz](std::span<const double> theta) {
+                return ansatz({theta.begin(), theta.end()});
+            };
+            return vqe(h, wrapped, n_params,
+                       {max_iterations, tol, std::move(initial_parameters)});
+        },
+        "hamiltonian"_a, "ansatz"_a, "n_params"_a, "max_iterations"_a = 100,
+        "tol"_a = 1e-9, "initial_parameters"_a = std::vector<double>{});
+
     auto nt = alg.def_submodule("number_theory", "classical number theory");
     nt.def("gcd", &number_theory::gcd);
     nt.def("pow_mod", &number_theory::pow_mod);
@@ -285,4 +319,53 @@ PYBIND11_MODULE(_pylqcs, m) {
     nt.def("continued_fraction_denominators",
            &number_theory::continued_fraction_denominators, "num"_a, "den"_a,
            "max_denominator"_a);
+
+    // —— OpenQASM 2.0 ——
+    auto io_mod = m.def_submodule("io", "OpenQASM import/export");
+    io_mod.def("to_qasm", &io::to_qasm, "circuit"_a);
+    io_mod.def("from_qasm", &io::from_qasm, "source"_a);
+
+    // —— 噪声与密度矩阵后端 ——
+    py::class_<KrausChannel>(m, "KrausChannel")
+        .def_static("depolarizing", &KrausChannel::depolarizing, "p"_a)
+        .def_static("amplitude_damping", &KrausChannel::amplitude_damping,
+                    "gamma"_a)
+        .def_static("phase_damping", &KrausChannel::phase_damping, "gamma"_a)
+        .def_static("bit_flip", &KrausChannel::bit_flip, "p"_a)
+        .def_static("phase_flip", &KrausChannel::phase_flip, "p"_a);
+
+    py::class_<NoiseModel>(m, "NoiseModel")
+        .def(py::init<>())
+        .def("add_all_qubit_channel", &NoiseModel::add_all_qubit_channel,
+             py::return_value_policy::reference_internal, "channel"_a)
+        .def("empty", &NoiseModel::empty);
+
+    py::class_<DensityMatrix>(m, "DensityMatrix")
+        .def(py::init<std::size_t>(), "num_qubits"_a)
+        .def("num_qubits", &DensityMatrix::num_qubits)
+        .def("dim", &DensityMatrix::dim)
+        .def("element", &DensityMatrix::element, "row"_a, "col"_a)
+        .def("apply_channel", &DensityMatrix::apply_channel, "channel"_a,
+             "qubit"_a)
+        .def("trace", &DensityMatrix::trace)
+        .def("purity", &DensityMatrix::purity)
+        .def("fidelity", &DensityMatrix::fidelity, "psi"_a)
+        .def("probabilities", [](const DensityMatrix& rho) {
+            const auto p = rho.probabilities();
+            py::array_t<double> arr(static_cast<py::ssize_t>(p.size()));
+            std::copy(p.begin(), p.end(),
+                      static_cast<double*>(arr.request().ptr));
+            return arr;
+        });
+
+    py::class_<DensityMatrixSimulator>(m, "DensityMatrixSimulator")
+        .def(py::init([](std::optional<std::uint64_t> seed, NoiseModel noise) {
+                 return DensityMatrixSimulator({seed, std::move(noise)});
+             }),
+             "seed"_a = py::none(), "noise"_a = NoiseModel{})
+        .def("run", &DensityMatrixSimulator::run, "circuit"_a, "shots"_a = 1024,
+             py::call_guard<py::gil_scoped_release>())
+        .def("run_density_matrix", &DensityMatrixSimulator::run_density_matrix,
+             "circuit"_a, py::call_guard<py::gil_scoped_release>())
+        .def("name", &DensityMatrixSimulator::name);
 }

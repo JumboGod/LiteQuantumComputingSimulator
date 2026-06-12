@@ -129,6 +129,69 @@ def test_number_theory():
     assert 4 in nt.continued_fraction_denominators(192, 256, 15)
 
 
+def test_expectation_value():
+    qc = lq.QuantumCircuit(2)
+    qc.h(0).cx(0, 1)
+    sv = lq.StatevectorSimulator().run_statevector(qc)
+    assert sv.expectation_value("ZZ") == pytest.approx(1.0)
+    assert sv.expectation_value("XX") == pytest.approx(1.0)
+    assert sv.expectation_value("YY") == pytest.approx(-1.0)
+
+
+H2 = [
+    (-1.052373245772859, "II"),
+    (+0.39793742484318045, "IZ"),
+    (-0.39793742484318045, "ZI"),
+    (-0.01128010425623538, "ZZ"),
+    (+0.18093119978423156, "XX"),
+]
+
+
+def test_vqe_h2_with_python_ansatz():
+    def ansatz(theta):
+        qc = lq.QuantumCircuit(2)
+        qc.x(0).ry(theta[0], 1).cx(1, 0)
+        return qc
+
+    res = lq.algorithms.vqe(H2, ansatz, 1, max_iterations=50)
+    assert res.energy == pytest.approx(-1.8572750302023824, abs=1e-9)
+    assert len(res.parameters) == 1
+
+
+def test_qasm_round_trip():
+    qc = lq.QuantumCircuit(2, 2)
+    qc.h(0).cx(0, 1).rz(0.5, 1).measure_all()
+    qasm = lq.io.to_qasm(qc)
+    assert "OPENQASM 2.0;" in qasm
+    parsed = lq.io.from_qasm(qasm)
+    assert parsed.num_qubits() == 2
+    a = lq.StatevectorSimulator(seed=3).run(qc, shots=100).counts()
+    b = lq.StatevectorSimulator(seed=3).run(parsed, shots=100).counts()
+    assert a == b
+
+
+def test_noisy_density_matrix():
+    bell = lq.QuantumCircuit(2)
+    bell.h(0).cx(0, 1)
+    ideal = lq.StatevectorSimulator().run_statevector(bell)
+
+    rho = lq.DensityMatrixSimulator().run_density_matrix(bell)
+    assert rho.fidelity(ideal) == pytest.approx(1.0)
+
+    p = 0.1
+    rho.apply_channel(lq.KrausChannel.depolarizing(p), 0)
+    rho.apply_channel(lq.KrausChannel.depolarizing(p), 1)
+    expected = (1 - p) ** 2 + p * (2 - p) / 4
+    assert rho.fidelity(ideal) == pytest.approx(expected, abs=1e-12)
+
+    noise = lq.NoiseModel()
+    noise.add_all_qubit_channel(lq.KrausChannel.depolarizing(0.1))
+    bell.measure_all()
+    counts = lq.DensityMatrixSimulator(seed=7, noise=noise).run(
+        bell, shots=2048).counts()
+    assert set(counts) == {"00", "01", "10", "11"}
+
+
 def test_visualization_figures():
     matplotlib = pytest.importorskip("matplotlib")
     matplotlib.use("Agg")

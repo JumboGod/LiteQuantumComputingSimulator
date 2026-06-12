@@ -16,23 +16,33 @@ C++ 负责全部数值计算，Python 侧提供交互与 matplotlib 可视化。
 """
 
 from ._pylqcs import (  # noqa: F401
+    DensityMatrix,
+    DensityMatrixSimulator,
     Gate,
     GateType,
+    KrausChannel,
+    NoiseModel,
     QuantumCircuit,
     Result,
     Statevector,
     StatevectorSimulator,
     algorithms,
+    io,
 )
 
 __version__ = "0.1.0"
 
 __all__ = [
+    "DensityMatrix",
+    "DensityMatrixSimulator",
     "Gate",
     "GateType",
+    "KrausChannel",
+    "NoiseModel",
     "QuantumCircuit",
     "Result",
     "Statevector",
     "StatevectorSimulator",
     "algorithms",
+    "io",
 ]

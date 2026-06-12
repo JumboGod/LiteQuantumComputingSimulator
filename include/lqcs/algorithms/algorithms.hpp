@@ -12,3 +12,4 @@
 #include "qpe.hpp"
 #include "shor.hpp"
 #include "simon.hpp"
+#include "vqe.hpp"

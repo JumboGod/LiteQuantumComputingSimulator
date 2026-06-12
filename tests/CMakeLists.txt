@@ -20,6 +20,10 @@ add_executable(lqcs_tests
     test_number_theory.cpp
     test_algorithms.cpp
     test_shor.cpp
+    test_expectation.cpp
+    test_vqe.cpp
+    test_qasm.cpp
+    test_density.cpp
 )
 target_link_libraries(lqcs_tests PRIVATE lqcs GTest::gtest_main)
 target_include_directories(lqcs_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)
