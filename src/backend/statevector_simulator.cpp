@@ -105,8 +105,43 @@ Result run_sampling(const QuantumCircuit& circuit, std::size_t shots,
     return Result(std::move(counts), shots);
 }
 
-// 中间测量/Reset 电路：每个 shot 独立演化并按 Born 规则坍缩
-Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng) {
+// 轨迹法噪声：对一个比特按 ||K_i|ψ>||² 采样并应用一个 Kraus 分支
+void sample_kraus_branch(Statevector& sv, const KrausChannel& channel,
+                         qubit_t q, Rng& rng) {
+    const double r = rng.uniform();
+    double cum = 0.0;
+    // 兜底：浮点残差导致累计概率略小于 1 时，落到最后一个非零分支
+    const std::array<complex_t, 4>* chosen = nullptr;
+    double chosen_p = 0.0;
+    for (const auto& kraus : channel.ops) {
+        const double p =
+            kernels::kraus_probability(sv.data(), sv.size(), q, kraus.data());
+        if (p <= 0.0) continue;
+        chosen = &kraus;
+        chosen_p = p;
+        cum += p;
+        if (r < cum) break;
+    }
+    if (!chosen) return;  // 理论上不可达（完备性保证 Σp = 1）
+    // 归一化 1/√p 融进矩阵，复用单比特内核
+    const double inv = 1.0 / std::sqrt(chosen_p);
+    const complex_t m[4] = {(*chosen)[0] * inv, (*chosen)[1] * inv,
+                            (*chosen)[2] * inv, (*chosen)[3] * inv};
+    kernels::apply_single_qubit(sv.data(), sv.size(), q, m);
+}
+
+void apply_trajectory_noise(Statevector& sv, const std::vector<qubit_t>& qubits,
+                            const NoiseModel& noise, Rng& rng) {
+    for (const auto& channel : noise.channels()) {
+        for (qubit_t q : qubits) {
+            sample_kraus_branch(sv, channel, q, rng);
+        }
+    }
+}
+
+// 中间测量/Reset/含噪电路：每个 shot 独立演化（轨迹）
+Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng,
+                    const NoiseModel& noise) {
     std::map<std::string, std::size_t> counts;
     const std::size_t n_clbits = circuit.num_clbits();
     std::string key(n_clbits, '0');
@@ -127,6 +162,9 @@ Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng) 
                     break;
                 default:
                     apply_instruction(sv, inst);
+                    if (!noise.empty()) {
+                        apply_trajectory_noise(sv, inst.qubits, noise, rng);
+                    }
                     break;
             }
         }
@@ -169,6 +207,11 @@ QuantumCircuit StatevectorSimulator::maybe_fuse(const QuantumCircuit& circuit) c
 }
 
 Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
+    if (!options_.noise.empty()) {
+        throw std::invalid_argument(
+            "run_statevector: noisy simulation is stochastic (one trajectory is "
+            "not the quantum state); use run() or DensityMatrixSimulator");
+    }
     configure_threads();
     return evolve(maybe_fuse(circuit));
 }
@@ -178,11 +221,13 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
         throw std::invalid_argument("run: shots must be >= 1");
     }
     configure_threads();
-    const QuantumCircuit opt = maybe_fuse(circuit);
+    const bool noisy = !options_.noise.empty();
+    // 噪声绑定在门上：融合会合并/消去门，改变噪声作用点，故含噪时禁用
+    const QuantumCircuit opt = noisy ? circuit : maybe_fuse(circuit);
 
-    // 自动选择执行路径：含 Reset 或「测量后还有门」时走逐 shot 演化
+    // 自动选择执行路径：含噪声、Reset 或「测量后还有门」时走逐 shot 演化
     bool seen_measure = false;
-    bool per_shot = false;
+    bool per_shot = noisy;
     for (const auto& inst : opt.instructions()) {
         if (inst.gate.type == GateType::Measure) {
             seen_measure = true;
@@ -200,7 +245,7 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
 
     Rng rng(options_.seed);
     if (per_shot) {
-        return run_per_shot(opt, shots, rng);
+        return run_per_shot(opt, shots, rng, options_.noise);
     }
     const Statevector sv = evolve(opt);
     return run_sampling(opt, shots, sv, rng);

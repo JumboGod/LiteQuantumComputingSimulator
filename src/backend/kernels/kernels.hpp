@@ -50,4 +50,9 @@ bool collapse_qubit(complex_t* state, std::size_t n_amps, qubit_t q,
 // 重置比特到 |0>：先按 Born 规则坍缩，若得 1 再翻转回 0
 void reset_qubit(complex_t* state, std::size_t n_amps, qubit_t q, double random01);
 
+// 轨迹法噪声：单比特 Kraus 算符的分支概率 ||K|ψ>||²（只读，不修改态）。
+// 分支应用复用 apply_single_qubit（把 1/√p 归一化融进矩阵即可）。
+double kraus_probability(const complex_t* state, std::size_t n_amps,
+                         qubit_t target, const complex_t k[4]);
+
 }  // namespace lqcs::kernels

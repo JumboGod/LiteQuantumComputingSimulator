@@ -192,6 +192,31 @@ def test_noisy_density_matrix():
     assert set(counts) == {"00", "01", "10", "11"}
 
 
+def test_trajectory_noise_on_statevector_backend():
+    noise = lq.NoiseModel()
+    noise.add_all_qubit_channel(lq.KrausChannel.depolarizing(0.1))
+
+    bell = lq.QuantumCircuit(2, 2)
+    bell.h(0).cx(0, 1).measure_all()
+    shots = 20000
+    counts = lq.StatevectorSimulator(seed=7, noise=noise).run(
+        bell, shots=shots).counts()
+    # 与密度矩阵精确解交叉验证
+    exact = lq.DensityMatrixSimulator(noise=noise).run_density_matrix(
+        lq.QuantumCircuit(2).h(0).cx(0, 1)).probabilities()
+    for i, key in enumerate(["00", "01", "10", "11"]):
+        assert counts.get(key, 0) / shots == pytest.approx(exact[i], abs=0.02)
+
+    # 16 比特含噪（密度矩阵后端不可能）
+    big = lq.QuantumCircuit(16, 16)
+    big.h(0)
+    for q in range(15):
+        big.cx(q, q + 1)
+    big.measure_all()
+    r = lq.StatevectorSimulator(seed=1, noise=noise).run(big, shots=8)
+    assert sum(r.counts().values()) == 8
+
+
 def test_visualization_figures():
     matplotlib = pytest.importorskip("matplotlib")
     matplotlib.use("Agg")

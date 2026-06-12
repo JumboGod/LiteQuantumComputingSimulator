@@ -222,4 +222,21 @@ void reset_qubit(complex_t* state, std::size_t n_amps, qubit_t q, double random0
     }
 }
 
+double kraus_probability(const complex_t* state, std::size_t n_amps,
+                         qubit_t target, const complex_t k[4]) {
+    const std::size_t n_groups = n_amps / 2;
+    const complex_t k0 = k[0], k1 = k[1], k2 = k[2], k3 = k[3];
+    double p = 0.0;
+#pragma omp parallel for schedule(static) reduction(+ : p) \
+    if (n_amps >= kParallelThreshold)
+    for (std::size_t g = 0; g < n_groups; ++g) {
+        const std::size_t i0 = bits::insert_zero_bit(g, target);
+        const std::size_t i1 = i0 | (std::size_t{1} << target);
+        const complex_t a0 = state[i0];
+        const complex_t a1 = state[i1];
+        p += std::norm(k0 * a0 + k1 * a1) + std::norm(k2 * a0 + k3 * a1);
+    }
+    return p;
+}
+
 }  // namespace lqcs::kernels
