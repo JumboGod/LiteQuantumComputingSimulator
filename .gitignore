@@ -1,8 +1,63 @@
+# ===== 构建产物 =====
 build/
+# VS2022 打开文件夹模式的默认输出目录
+out/
+# CLion 默认输出目录
+cmake-build-*/
+# 用户本地 CMake 预设（个人配置不入库）
+CMakeUserPresets.json
+
+# ===== Visual Studio =====
+.vs/
+*.sln.docstates
+*.user
+*.suo
+*.vcxproj.filters
+x64/
+Debug/
+Release/
+# VS 旧式 CMake 配置（个人配置不入库）
+CMakeSettings.json
+
+# ===== 其他 IDE / 编辑器 =====
+.idea/
+.vscode/
+*.swp
+*~
+
+# ===== C/C++ 中间产物 =====
+*.o
+*.obj
+*.a
+*.lib
+*.pdb
+*.ilk
+*.exe
+# clangd 索引
 .cache/
 compile_commands.json
+
+# ===== Python =====
 __pycache__/
-*.so
 *.pyc
+*.pyo
+# pybind11 模块（构建时输出到 python/pylqcs/）
+*.so
+# Windows 下的 Python 扩展
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+
+# ===== Python 打包 =====
 dist/
 *.egg-info/
+*.whl
+.skbuild/
+
+# ===== 测试 / 临时输出 =====
+# CTest 残留
+Testing/
+# 示例脚本生成的图片（文档配图除外）
+*.png
+!docs/**/*.png
