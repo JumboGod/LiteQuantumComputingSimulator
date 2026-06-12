@@ -14,8 +14,20 @@ std::uint64_t gcd(std::uint64_t a, std::uint64_t b) {
 }
 
 std::uint64_t mul_mod(std::uint64_t a, std::uint64_t b, std::uint64_t mod) {
+#ifdef __SIZEOF_INT128__
     return static_cast<std::uint64_t>(
         static_cast<unsigned __int128>(a) * b % mod);
+#else
+    // MSVC 无 128 位整型：双倍-累加（俄国农民乘法），O(64) 次迭代
+    std::uint64_t result = 0;
+    a %= mod;
+    while (b > 0) {
+        if (b & 1) result = (result + a) % mod;
+        a = (a * 2) % mod;
+        b >>= 1;
+    }
+    return result;
+#endif
 }
 
 std::uint64_t pow_mod(std::uint64_t base, std::uint64_t exp, std::uint64_t mod) {

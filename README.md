@@ -86,6 +86,36 @@ ctest --test-dir build --output-on-failure
 ./build/examples/ghz_state
 ```
 
+## Windows / Visual Studio 2022
+
+项目已适配 MSVC（v143 工具集，C++20）。两种方式任选：
+
+**方式一（推荐）：VS2022 直接打开 CMake 工程**
+
+1. 安装 VS2022 时勾选「使用 C++ 的桌面开发」工作负载
+   （含 MSVC v143、Windows SDK、CMake 工具）。
+2. 启动 VS2022 → 「打开本地文件夹」→ 选择仓库根目录，
+   VS 会自动识别 CMakeLists.txt 与 CMakePresets.json 并开始配置
+   （首次配置需联网下载 GoogleTest）。
+3. 顶部工具栏选择配置预设（vs2022 / Debug）→ 「生成」→「全部生成」。
+4. 「选择启动项」下拉框选一个可执行文件（如 shor.exe、bell_state.exe）
+   → F5 调试运行。
+5. 「测试」→「测试资源管理器」可直接浏览并运行全部 GoogleTest 用例。
+
+**方式二：生成 .sln 解决方案**
+
+```bat
+cmake --preset vs2022
+:: 打开 build\vs2022\LiteQuantumComputingSimulator.sln
+:: 在解决方案资源管理器中右键示例工程 → 设为启动项目 → F5
+```
+
+提示：
+- 调试内核代码时建议关闭 OpenMP 以便单步：配置时加
+  `-DLQCS_ENABLE_OPENMP=OFF`。
+- Python 绑定需本机安装 Python 3.9+：`-DLQCS_BUILD_PYTHON=ON`，
+  构建后 `set PYTHONPATH=python` 即可 `import pylqcs`。
+
 ## 设计约定
 
 - **比特序与 Qiskit 一致（little-endian）**：qubit 0 为最低有效位，
