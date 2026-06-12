@@ -19,6 +19,7 @@ add_library(lqcs STATIC
     src/backend/statevector_simulator.cpp
     src/backend/kernels/gate_kernels.cpp
     src/result/result.cpp
+    src/visualization/circuit_drawer.cpp
 )
 target_include_directories(lqcs PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

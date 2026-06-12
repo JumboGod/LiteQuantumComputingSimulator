@@ -16,67 +16,59 @@ namespace {
 
 void apply_instruction(Statevector& sv, const Instruction& inst) {
     const Gate& g = inst.gate;
-    switch (g.type) {
-        case GateType::CX:
-        case GateType::CZ:
-        case GateType::CP: {
-            // 受控门走子空间路径：对 control=1 的子空间应用基门矩阵
-            const GateType base = (g.type == GateType::CX)   ? GateType::X
-                                  : (g.type == GateType::CZ) ? GateType::Z
-                                                             : GateType::P;
-            const auto m = Gate{base, g.params}.matrix();
-            kernels::apply_controlled_single_qubit(sv.data(), sv.size(),
-                                                   inst.qubits[0], inst.qubits[1],
-                                                   m.data());
-            break;
+    const std::size_t nc = g.n_controls;
+    const std::size_t k = g.base_qubits();
+    const qubit_t* controls = inst.qubits.data();
+    const qubit_t* targets = inst.qubits.data() + nc;
+
+    if (g.type == GateType::Permutation) {
+        kernels::apply_controlled_permutation(sv.data(), sv.size(), controls, nc,
+                                              targets, k, g.perm.data());
+        return;
+    }
+
+    // 无控制位的快路径
+    if (nc == 0) {
+        if (k == 1) {
+            const auto m = g.base_matrix();
+            if (g.is_diagonal()) {
+                kernels::apply_diagonal_single_qubit(sv.data(), sv.size(),
+                                                     targets[0], m[0], m[3]);
+            } else {
+                kernels::apply_single_qubit(sv.data(), sv.size(), targets[0],
+                                            m.data());
+            }
+            return;
         }
-        case GateType::SWAP:
-            kernels::apply_swap(sv.data(), sv.size(), inst.qubits[0], inst.qubits[1]);
-            break;
-        default: {
-            const auto m = g.matrix();
-            kernels::apply_single_qubit(sv.data(), sv.size(), inst.qubits[0],
-                                        m.data());
-            break;
+        if (g.type == GateType::SWAP) {
+            kernels::apply_swap(sv.data(), sv.size(), targets[0], targets[1]);
+            return;
+        }
+        if (k == 2) {
+            const auto m = g.base_matrix();
+            kernels::apply_two_qubit(sv.data(), sv.size(), targets[0], targets[1],
+                                     m.data());
+            return;
         }
     }
+
+    // 单控制单比特快路径
+    if (nc == 1 && k == 1) {
+        const auto m = g.base_matrix();
+        kernels::apply_controlled_single_qubit(sv.data(), sv.size(), controls[0],
+                                               targets[0], m.data());
+        return;
+    }
+
+    // 通用路径：任意控制位数 + 任意基门
+    const auto m = g.base_matrix();
+    kernels::apply_controlled_unitary(sv.data(), sv.size(), controls, nc, targets,
+                                      k, m.data());
 }
 
-}  // namespace
-
-Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
-    Statevector sv(circuit.num_qubits());
-    for (const auto& inst : circuit.instructions()) {
-        if (inst.gate.is_unitary()) apply_instruction(sv, inst);
-    }
-    return sv;
-}
-
-Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shots) {
-    if (shots == 0) {
-        throw std::invalid_argument("run: shots must be >= 1");
-    }
-
-    // M1 限制：只支持末尾测量。校验测量之后不再出现幺正门。
-    bool seen_measure = false;
-    for (const auto& inst : circuit.instructions()) {
-        if (inst.gate.type == GateType::Measure) {
-            seen_measure = true;
-        } else if (seen_measure && inst.gate.is_unitary()) {
-            throw std::runtime_error(
-                "mid-circuit measurement is not supported yet (planned for M2): "
-                "gates found after a measure");
-        }
-    }
-    if (!seen_measure) {
-        throw std::invalid_argument(
-            "run: circuit has no measurements; use run_statevector() to inspect "
-            "the final state");
-    }
-
-    // 演化一次到末态
-    Statevector sv = run_statevector(circuit);
-
+// 末尾测量电路的快速路径：演化一次，对概率分布采样 shots 次
+Result run_sampling(const QuantumCircuit& circuit, std::size_t shots,
+                    const Statevector& sv, Rng& rng) {
     // 测量映射：clbit <- qubit（同一 clbit 被多次写入时，以最后一次为准）
     std::vector<std::optional<qubit_t>> clbit_source(circuit.num_clbits());
     for (const auto& inst : circuit.instructions()) {
@@ -85,12 +77,10 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
         }
     }
 
-    // 对概率分布累积求和后做二分采样
     std::vector<double> cumulative = sv.probabilities();
     std::partial_sum(cumulative.begin(), cumulative.end(), cumulative.begin());
     const double total = cumulative.back();
 
-    Rng rng(options_.seed);
     std::map<std::string, std::size_t> counts;
     const std::size_t n_clbits = circuit.num_clbits();
     std::string key(n_clbits, '0');
@@ -108,6 +98,84 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
         ++counts[key];
     }
     return Result(std::move(counts), shots);
+}
+
+// 中间测量/Reset 电路：每个 shot 独立演化并按 Born 规则坍缩
+Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng) {
+    std::map<std::string, std::size_t> counts;
+    const std::size_t n_clbits = circuit.num_clbits();
+    std::string key(n_clbits, '0');
+    for (std::size_t s = 0; s < shots; ++s) {
+        Statevector sv(circuit.num_qubits());
+        std::vector<bool> creg(n_clbits, false);
+        for (const auto& inst : circuit.instructions()) {
+            switch (inst.gate.type) {
+                case GateType::Measure:
+                    creg[inst.clbits[0]] = kernels::collapse_qubit(
+                        sv.data(), sv.size(), inst.qubits[0], rng.uniform());
+                    break;
+                case GateType::Reset:
+                    kernels::reset_qubit(sv.data(), sv.size(), inst.qubits[0],
+                                         rng.uniform());
+                    break;
+                case GateType::Barrier:
+                    break;
+                default:
+                    apply_instruction(sv, inst);
+                    break;
+            }
+        }
+        for (std::size_t c = 0; c < n_clbits; ++c) {
+            key[n_clbits - 1 - c] = creg[c] ? '1' : '0';
+        }
+        ++counts[key];
+    }
+    return Result(std::move(counts), shots);
+}
+
+}  // namespace
+
+Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
+    Statevector sv(circuit.num_qubits());
+    for (const auto& inst : circuit.instructions()) {
+        if (inst.gate.type == GateType::Reset) {
+            throw std::invalid_argument(
+                "run_statevector: Reset is non-deterministic; use run() instead");
+        }
+        if (inst.gate.is_unitary()) apply_instruction(sv, inst);
+    }
+    return sv;
+}
+
+Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shots) {
+    if (shots == 0) {
+        throw std::invalid_argument("run: shots must be >= 1");
+    }
+
+    // 自动选择执行路径：含 Reset 或「测量后还有门」时走逐 shot 演化
+    bool seen_measure = false;
+    bool per_shot = false;
+    for (const auto& inst : circuit.instructions()) {
+        if (inst.gate.type == GateType::Measure) {
+            seen_measure = true;
+        } else if (inst.gate.type == GateType::Reset) {
+            per_shot = true;
+        } else if (seen_measure && inst.gate.is_unitary()) {
+            per_shot = true;
+        }
+    }
+    if (!seen_measure) {
+        throw std::invalid_argument(
+            "run: circuit has no measurements; use run_statevector() to inspect "
+            "the final state");
+    }
+
+    Rng rng(options_.seed);
+    if (per_shot) {
+        return run_per_shot(circuit, shots, rng);
+    }
+    const Statevector sv = run_statevector(circuit);
+    return run_sampling(circuit, shots, sv, rng);
 }
 
 }  // namespace lqcs

@@ -13,6 +13,9 @@ add_executable(lqcs_tests
     test_circuit.cpp
     test_statevector.cpp
     test_measurement.cpp
+    test_equivalence.cpp
+    test_qft.cpp
+    test_midcircuit.cpp
 )
 target_link_libraries(lqcs_tests PRIVATE lqcs GTest::gtest_main)
 target_include_directories(lqcs_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)

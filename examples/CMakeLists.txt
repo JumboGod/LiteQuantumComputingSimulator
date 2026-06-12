@@ -1,4 +1,4 @@
-foreach(example bell_state ghz_state)
+foreach(example bell_state ghz_state qft grover)
     add_executable(${example} ${example}.cpp)
     target_link_libraries(${example} PRIVATE lqcs)
 endforeach()

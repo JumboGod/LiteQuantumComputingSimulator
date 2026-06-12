@@ -125,6 +125,66 @@ TEST(Statevector, NormIsPreservedByRandomishCircuit) {
     EXPECT_NEAR(sv.norm(), 1.0, 1e-12);
 }
 
+TEST(Statevector, ToffoliTruthTable) {
+    {   // 两个控制位都为 1 才翻转：|011> → |111>
+        QuantumCircuit qc(3);
+        qc.x(0).x(1).ccx(0, 1, 2);
+        auto sv = StatevectorSimulator().run_statevector(qc);
+        expect_amp(sv, 7, {1, 0});
+    }
+    {   // 只有一个控制位为 1：不动作
+        QuantumCircuit qc(3);
+        qc.x(0).ccx(0, 1, 2);
+        auto sv = StatevectorSimulator().run_statevector(qc);
+        expect_amp(sv, 1, {1, 0});
+    }
+}
+
+TEST(Statevector, FredkinSwapsWhenControlSet) {
+    QuantumCircuit qc(3);
+    qc.x(0).x(1).cswap(0, 1, 2);  // 控制位 q0=1：交换 q1,q2，|011> → |101>
+    auto sv = StatevectorSimulator().run_statevector(qc);
+    expect_amp(sv, 5, {1, 0});
+}
+
+TEST(Statevector, PermutationGateMovesBasisStates) {
+    // 2 比特循环移位 |l> → |l+1 mod 4>
+    const std::vector<std::size_t> cycle = {1, 2, 3, 0};
+    {
+        QuantumCircuit qc(2);
+        qc.x(0).permutation(cycle, {0, 1});  // |01>=idx1 → idx2
+        auto sv = StatevectorSimulator().run_statevector(qc);
+        expect_amp(sv, 2, {1, 0});
+    }
+    {   // 受控置换：控制位为 0 时不动作（Shor 受控模幂的雏形）
+        QuantumCircuit qc(3);
+        qc.x(0);  // 工作位 q0=1，控制位 q2=0
+        qc.append({Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
+        auto sv = StatevectorSimulator().run_statevector(qc);
+        expect_amp(sv, 1, {1, 0});  // 不变
+    }
+    {   // 控制位为 1 时动作
+        QuantumCircuit qc(3);
+        qc.x(0).x(2);
+        qc.append({Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
+        auto sv = StatevectorSimulator().run_statevector(qc);
+        expect_amp(sv, 6, {1, 0});  // 工作寄存器 |01>→|10>，加上 q2=1 → idx 6
+    }
+}
+
+TEST(Statevector, CustomUnitaryMatchesBuiltinGate) {
+    // 自定义 H 矩阵的行为与内置 H 完全一致
+    const auto h_mat = Gate{GateType::H, {}}.matrix();
+    QuantumCircuit qc1(2), qc2(2);
+    qc1.unitary(h_mat, {1});
+    qc2.h(1);
+    auto sv1 = StatevectorSimulator().run_statevector(qc1);
+    auto sv2 = StatevectorSimulator().run_statevector(qc2);
+    for (std::size_t i = 0; i < sv1.size(); ++i) {
+        EXPECT_NEAR(std::abs(sv1[i] - sv2[i]), 0.0, kTol);
+    }
+}
+
 TEST(Statevector, TargetOnHighQubit) {
     // 在高位比特上作用门，验证 stride 展开正确
     QuantumCircuit qc(5);
