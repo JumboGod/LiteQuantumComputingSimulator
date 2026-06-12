@@ -12,6 +12,8 @@ endif()
 option(LQCS_BUILD_TESTS "Build unit tests" ON)
 option(LQCS_BUILD_EXAMPLES "Build examples" ON)
 option(LQCS_BUILD_PYTHON "Build Python bindings (pylqcs)" OFF)
+option(LQCS_BUILD_BENCHMARKS "Build benchmarks" ON)
+option(LQCS_ENABLE_OPENMP "Enable OpenMP parallel kernels" ON)
 
 add_library(lqcs STATIC
     src/algorithms/arithmetic.cpp
@@ -26,6 +28,8 @@ add_library(lqcs STATIC
     src/algorithms/simon.cpp
     src/circuit/gate.cpp
     src/circuit/quantum_circuit.cpp
+    src/transpiler/gate_fusion.cpp
+    src/transpiler/redundant_elimination.cpp
     src/backend/statevector.cpp
     src/backend/statevector_simulator.cpp
     src/backend/kernels/gate_kernels.cpp
@@ -40,8 +44,21 @@ target_compile_options(lqcs PRIVATE -Wall -Wextra)
 # 静态库可能被链接进 Python 扩展（共享库）
 set_target_properties(lqcs PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
+if(LQCS_ENABLE_OPENMP)
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(lqcs PUBLIC OpenMP::OpenMP_CXX)
+    else()
+        message(STATUS "OpenMP not found - building serial kernels")
+    endif()
+endif()
+
 if(LQCS_BUILD_EXAMPLES)
     add_subdirectory(examples)
+endif()
+
+if(LQCS_BUILD_BENCHMARKS)
+    add_subdirectory(benchmarks)
 endif()
 
 if(LQCS_BUILD_TESTS)

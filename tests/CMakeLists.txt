@@ -16,6 +16,7 @@ add_executable(lqcs_tests
     test_equivalence.cpp
     test_qft.cpp
     test_midcircuit.cpp
+    test_transpiler.cpp
     test_number_theory.cpp
     test_algorithms.cpp
     test_shor.cpp
