@@ -419,6 +419,30 @@ PYBIND11_MODULE(_pylqcs, m) {
     io_mod.def("to_qasm", &io::to_qasm, "circuit"_a);
     io_mod.def("from_qasm", &io::from_qasm, "source"_a);
 
+    // —— Stabilizer 后端（Clifford 电路，O(n²)，可达数千比特）——
+    py::class_<StabilizerTableau>(m, "StabilizerTableau")
+        .def(py::init<std::size_t>(), "num_qubits"_a)
+        .def("num_qubits", &StabilizerTableau::num_qubits)
+        .def("h", &StabilizerTableau::h).def("s", &StabilizerTableau::s)
+        .def("sdg", &StabilizerTableau::sdg).def("sx", &StabilizerTableau::sx)
+        .def("x", &StabilizerTableau::x).def("y", &StabilizerTableau::y)
+        .def("z", &StabilizerTableau::z)
+        .def("cx", &StabilizerTableau::cx).def("cy", &StabilizerTableau::cy)
+        .def("cz", &StabilizerTableau::cz).def("swap", &StabilizerTableau::swap)
+        .def("measure", &StabilizerTableau::measure, "qubit"_a, "random01"_a)
+        .def("stabilizers", &StabilizerTableau::stabilizers);
+
+    py::class_<StabilizerSimulator>(m, "StabilizerSimulator")
+        .def(py::init([](std::optional<std::uint64_t> seed) {
+                 return StabilizerSimulator({seed});
+             }),
+             "seed"_a = py::none())
+        .def("run", &StabilizerSimulator::run, "circuit"_a, "shots"_a = 1024,
+             py::call_guard<py::gil_scoped_release>())
+        .def("run_tableau", &StabilizerSimulator::run_tableau, "circuit"_a,
+             py::call_guard<py::gil_scoped_release>())
+        .def("name", &StabilizerSimulator::name);
+
     // —— 密度矩阵后端 ——
     py::class_<DensityMatrix>(m, "DensityMatrix")
         .def(py::init<std::size_t>(), "num_qubits"_a)

@@ -27,6 +27,7 @@ add_executable(lqcs_tests
     test_trajectory.cpp
     test_pauli_rotation.cpp
     test_gate_fusion.cpp
+    test_stabilizer.cpp
 )
 target_link_libraries(lqcs_tests PRIVATE lqcs GTest::gtest_main)
 target_include_directories(lqcs_tests PRIVATE ${CMAKE_SOURCE_DIR}/src)

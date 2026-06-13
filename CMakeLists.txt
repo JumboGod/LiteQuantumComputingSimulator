@@ -35,6 +35,8 @@ add_library(lqcs STATIC
     src/backend/density_matrix.cpp
     src/backend/density_matrix_simulator.cpp
     src/backend/noise.cpp
+    src/backend/stabilizer.cpp
+    src/backend/stabilizer_simulator.cpp
     src/backend/statevector.cpp
     src/backend/statevector_simulator.cpp
     src/io/qasm.cpp

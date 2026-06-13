@@ -7,6 +7,8 @@
 #include "backend/density_matrix.hpp"
 #include "backend/density_matrix_simulator.hpp"
 #include "backend/noise.hpp"
+#include "backend/stabilizer.hpp"
+#include "backend/stabilizer_simulator.hpp"
 #include "backend/statevector.hpp"
 #include "backend/statevector_simulator.hpp"
 #include "io/qasm.hpp"

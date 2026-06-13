@@ -217,6 +217,31 @@ def test_trajectory_noise_on_statevector_backend():
     assert sum(r.counts().values()) == 8
 
 
+def test_stabilizer_simulator():
+    # Bell 态 stabilizer 群
+    bell = lq.QuantumCircuit(2)
+    bell.h(0).cx(0, 1)
+    gens = lq.StabilizerSimulator().run_tableau(bell).stabilizers()
+    assert gens == ["+XX", "+ZZ"]
+
+    # 1000 比特 GHZ：状态向量法不可能
+    n = 1000
+    ghz = lq.QuantumCircuit(n, n)
+    ghz.h(0)
+    for q in range(n - 1):
+        ghz.cx(q, q + 1)
+    ghz.measure_all()
+    counts = lq.StabilizerSimulator(seed=11).run(ghz, shots=4)
+    for key in counts.counts():
+        assert key in (("0" * n), ("1" * n))
+
+    # 非 Clifford 门被拒绝
+    bad = lq.QuantumCircuit(1, 1)
+    bad.t(0).measure(0, 0)
+    with pytest.raises(Exception):
+        lq.StabilizerSimulator().run(bad, shots=10)
+
+
 def test_fusion_block_size_consistency():
     qc = lq.QuantumCircuit(4, 4)
     qc.h(0).cx(0, 1).t(1).rx(0.4, 2).cx(1, 2).sx(3).cx(2, 3).h(0).measure_all()
