@@ -18,7 +18,8 @@ class StatevectorSimulator final : public Backend {
 public:
     struct Options {
         std::optional<std::uint64_t> seed;  // 固定种子使采样可复现
-        bool fuse_gates  = true;            // 自动单比特门融合（省全向量扫描）
+        bool fuse_gates  = true;            // 自动门融合（省全向量扫描）
+        std::size_t fusion_max_qubits = 4;  // 融合块最大比特数（qsim 风格）
         int  num_threads = 0;               // OpenMP 线程数（0 = 默认）
         // 噪声模型（轨迹法）。非空时：每个幺正门后对触及比特采样通道分支；
         // 自动禁用门融合（噪声绑定在门上，融合会改变物理语义）

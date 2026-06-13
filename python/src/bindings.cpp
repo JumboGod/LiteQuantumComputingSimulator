@@ -209,11 +209,18 @@ PYBIND11_MODULE(_pylqcs, m) {
     // —— StatevectorSimulator ——
     py::class_<StatevectorSimulator>(m, "StatevectorSimulator")
         .def(py::init([](std::optional<std::uint64_t> seed, bool fuse_gates,
-                         int num_threads, NoiseModel noise) {
-                 return StatevectorSimulator(
-                     {seed, fuse_gates, num_threads, std::move(noise)});
+                         std::size_t fusion_max_qubits, int num_threads,
+                         NoiseModel noise) {
+                 StatevectorSimulator::Options opt;
+                 opt.seed = seed;
+                 opt.fuse_gates = fuse_gates;
+                 opt.fusion_max_qubits = fusion_max_qubits;
+                 opt.num_threads = num_threads;
+                 opt.noise = std::move(noise);
+                 return StatevectorSimulator(std::move(opt));
              }),
-             "seed"_a = py::none(), "fuse_gates"_a = true, "num_threads"_a = 0,
+             "seed"_a = py::none(), "fuse_gates"_a = true,
+             "fusion_max_qubits"_a = 4, "num_threads"_a = 0,
              "noise"_a = NoiseModel{})
         .def("run", &StatevectorSimulator::run, "circuit"_a, "shots"_a = 1024,
              py::call_guard<py::gil_scoped_release>())

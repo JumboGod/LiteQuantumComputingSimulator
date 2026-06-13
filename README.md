@@ -29,6 +29,9 @@
   exp(-iθ/2·P) 专用 O(2ⁿ) 内核（UCCSD ansatz 主力门）、ParametricCircuit
   参数槽原位绑定（bind 不重建结构）、parameter-shift 解析梯度、
   梯度下降 VQE
+- ✅ **M9 多比特门融合**（对标 qsim/Aer）：贪心地把相邻门（含 CX/CCX）
+  聚合成 ≤k 比特稠密块（默认 4），把多次全状态向量扫描合并为一次；
+  实测相比无融合 ~30x、相比单比特融合再快 ~5x
 
 实测性能（4 核容器，`benchmarks/lqcs_bench`）：26 比特单门 135~275 ms，
 QFT(24) 3.4 s，门融合对单比特门密集电路加速 5.3~5.7 倍。

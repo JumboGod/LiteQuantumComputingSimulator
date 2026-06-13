@@ -216,7 +216,7 @@ void StatevectorSimulator::configure_threads() const {
 
 QuantumCircuit StatevectorSimulator::maybe_fuse(const QuantumCircuit& circuit) const {
     if (!options_.fuse_gates) return circuit;
-    return SingleQubitGateFusion().run(circuit);
+    return GateFusion(options_.fusion_max_qubits).run(circuit);
 }
 
 Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {

@@ -217,6 +217,17 @@ def test_trajectory_noise_on_statevector_backend():
     assert sum(r.counts().values()) == 8
 
 
+def test_fusion_block_size_consistency():
+    qc = lq.QuantumCircuit(4, 4)
+    qc.h(0).cx(0, 1).t(1).rx(0.4, 2).cx(1, 2).sx(3).cx(2, 3).h(0).measure_all()
+    ref = lq.StatevectorSimulator(
+        seed=5, fuse_gates=True, fusion_max_qubits=1).run(qc, 1024).counts()
+    for mb in (2, 3, 4):
+        got = lq.StatevectorSimulator(
+            seed=5, fuse_gates=True, fusion_max_qubits=mb).run(qc, 1024).counts()
+        assert got == ref, f"block size {mb} diverged"
+
+
 def test_pauli_rotation_matches_rzz():
     a = lq.QuantumCircuit(2)
     a.h(0).rp(0.7, "ZZ", [0, 1])
