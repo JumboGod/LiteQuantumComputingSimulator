@@ -39,11 +39,32 @@ std::size_t Gate::base_qubits() const {
         }
         case GateType::Permutation:
             return static_cast<std::size_t>(std::countr_zero(perm.size()));
+        case GateType::PauliRotation:
+            return pauli.size();
         case GateType::Barrier:
             return 0;
         default:
             return 1;  // 单比特门、Measure、Reset
     }
+}
+
+Gate::PauliMasks Gate::pauli_masks() const {
+    PauliMasks m;
+    const std::size_t k = pauli.size();
+    for (std::size_t j = 0; j < k; ++j) {
+        const char c = pauli[k - 1 - j];  // 局部位 j ↔ pauli 最右起第 j 个
+        const std::size_t bit = std::size_t{1} << j;
+        switch (c) {
+            case 'I': break;
+            case 'X': m.x |= bit; break;
+            case 'Y': m.x |= bit; m.zy |= bit; ++m.n_y; break;
+            case 'Z': m.zy |= bit; break;
+            default:
+                throw std::invalid_argument(
+                    "PauliRotation: pauli must contain only I/X/Y/Z");
+        }
+    }
+    return m;
 }
 
 bool Gate::is_unitary() const {
@@ -63,6 +84,8 @@ bool Gate::is_diagonal() const {
         case GateType::P:
         case GateType::RZZ:
             return true;
+        case GateType::PauliRotation:
+            return pauli_masks().x == 0;  // 仅含 I/Z 时对角
         default:
             return false;
     }
@@ -140,6 +163,29 @@ std::vector<complex_t> Gate::base_matrix() const {
                     0, 0, expi(h), 0,
                     0, 0, 0, expi(-h)};
         }
+        case GateType::PauliRotation: {
+            // exp(-iθ/2·P) = cos(θ/2)·I − i·sin(θ/2)·P
+            // P|col> = i^{nY}·(-1)^{popcount(col & zy)}·|col ⊕ x>
+            const std::size_t k = pauli.size();
+            const std::size_t dim = std::size_t{1} << k;
+            const auto m = pauli_masks();
+            const double h = params.at(0) / 2;
+            const complex_t c = std::cos(h);
+            const complex_t mis{0.0, -std::sin(h)};  // -i·sin
+            static constexpr complex_t kIPow[4] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+            const complex_t yphase = kIPow[m.n_y % 4];
+            std::vector<complex_t> out(dim * dim, complex_t{0, 0});
+            for (std::size_t col = 0; col < dim; ++col) {
+                out[col * dim + col] += c;
+                const std::size_t row = col ^ m.x;
+                const double sign =
+                    (static_cast<unsigned>(std::popcount(col & m.zy)) % 2 == 0)
+                        ? 1.0
+                        : -1.0;
+                out[row * dim + col] += mis * yphase * sign;
+            }
+            return out;
+        }
         case GateType::Unitary:
             return mat;
         case GateType::Permutation: {
@@ -201,6 +247,7 @@ Gate Gate::inverse() const {
         case GateType::RXX:
         case GateType::RYY:
         case GateType::RZZ:
+        case GateType::PauliRotation:
             inv.params[0] = -inv.params[0];
             return inv;
         case GateType::S:   inv.type = GateType::Sdg; return inv;
@@ -256,6 +303,7 @@ std::string Gate::name() const {
         case GateType::RXX:         base = "rxx"; break;
         case GateType::RYY:         base = "ryy"; break;
         case GateType::RZZ:         base = "rzz"; break;
+        case GateType::PauliRotation: base = "rp(" + pauli + ")"; break;
         case GateType::Unitary:     base = "unitary"; break;
         case GateType::Permutation: base = "perm"; break;
         case GateType::Measure:     base = "measure"; break;

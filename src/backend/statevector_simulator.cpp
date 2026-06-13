@@ -32,6 +32,19 @@ void apply_instruction(Statevector& sv, const Instruction& inst) {
         return;
     }
 
+    // 多比特 Pauli 旋转（无控制位走专用 O(2^n) 内核）
+    if (g.type == GateType::PauliRotation && nc == 0) {
+        const auto pm = g.pauli_masks();
+        std::size_t x_global = 0, zy_global = 0;
+        for (std::size_t j = 0; j < k; ++j) {
+            if (pm.x & (std::size_t{1} << j)) x_global |= std::size_t{1} << targets[j];
+            if (pm.zy & (std::size_t{1} << j)) zy_global |= std::size_t{1} << targets[j];
+        }
+        kernels::apply_pauli_rotation(sv.data(), sv.size(), x_global, zy_global,
+                                      pm.n_y, g.params.at(0));
+        return;
+    }
+
     // 无控制位的快路径
     if (nc == 0) {
         if (k == 1) {
