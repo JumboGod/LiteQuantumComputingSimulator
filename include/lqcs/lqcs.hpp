@@ -15,6 +15,7 @@
 #include "transpiler/transpiler.hpp"
 #include "circuit/gate.hpp"
 #include "circuit/instruction.hpp"
+#include "circuit/parametric_circuit.hpp"
 #include "circuit/quantum_circuit.hpp"
 #include "core/bit_utils.hpp"
 #include "core/random.hpp"

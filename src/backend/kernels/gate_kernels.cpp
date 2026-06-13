@@ -1,6 +1,7 @@
 #include "kernels.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <utility>
 #include <vector>
@@ -184,6 +185,42 @@ void apply_controlled_permutation(complex_t* state, std::size_t n_amps,
                 state[base | lay.offset[perm[l]]] = a[l];
             }
         }
+    }
+}
+
+void apply_pauli_rotation(complex_t* state, std::size_t n_amps,
+                          std::size_t x_global, std::size_t zy_global,
+                          unsigned n_y, double theta) {
+    const double h = theta / 2;
+    const complex_t c = std::cos(h);
+    const complex_t mis{0.0, -std::sin(h)};  // -i·sin(θ/2)
+    static constexpr complex_t kIPow[4] = {{1, 0}, {0, 1}, {-1, 0}, {0, -1}};
+    const complex_t yphase = mis * kIPow[n_y % 4];
+
+    if (x_global == 0) {
+        // 对角情形（纯 I/Z）：|i> → (c + yphase·sign(i))·|i>
+#pragma omp parallel for schedule(static) if (n_amps >= kParallelThreshold)
+        for (std::size_t i = 0; i < n_amps; ++i) {
+            const double sign =
+                (std::popcount(i & zy_global) % 2 == 0) ? 1.0 : -1.0;
+            state[i] *= c + yphase * sign;
+        }
+        return;
+    }
+
+    // 非对角：枚举振幅对 (i, i⊕x)，只在 i 的最低 X 位为 0 时处理避免重复
+    const std::size_t lsb = x_global & (~x_global + 1);
+#pragma omp parallel for schedule(static) if (n_amps >= kParallelThreshold)
+    for (std::size_t i = 0; i < n_amps; ++i) {
+        if (i & lsb) continue;
+        const std::size_t j = i ^ x_global;
+        const double si = (std::popcount(i & zy_global) % 2 == 0) ? 1.0 : -1.0;
+        const double sj = (std::popcount(j & zy_global) % 2 == 0) ? 1.0 : -1.0;
+        const complex_t ai = state[i];
+        const complex_t aj = state[j];
+        // a'_i = c·a_i + yphase·sign(j)·a_j;  a'_j = yphase·sign(i)·a_i + c·a_j
+        state[i] = c * ai + yphase * sj * aj;
+        state[j] = yphase * si * ai + c * aj;
     }
 }
 

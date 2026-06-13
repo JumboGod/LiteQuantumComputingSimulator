@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "../backend/statevector.hpp"
+#include "../circuit/parametric_circuit.hpp"
 #include "../circuit/quantum_circuit.hpp"
 
 namespace lqcs::algorithms {
@@ -41,5 +42,25 @@ struct VQEResult {
 // 每个坐标用 3 次能量评估解析求出最小值，无需梯度与学习率。
 VQEResult vqe(const Hamiltonian& hamiltonian, const Ansatz& ansatz,
               std::size_t n_params, const VQEOptions& options = {});
+
+// parameter-shift 梯度（解析，非数值近似）：
+//   dE/dθ_k = [E(θ + π/2·e_k) − E(θ − π/2·e_k)] / 2
+// 对生成元本征值 ±1 的旋转门（RX/RY/RZ/PauliRotation）精确成立。
+// ParametricCircuit 的参数化门均满足此条件。
+std::vector<double> parameter_shift_gradient(const Hamiltonian& hamiltonian,
+                                             const ParametricCircuit& ansatz,
+                                             std::span<const double> params);
+
+// 基于 parameter-shift 梯度的梯度下降 VQE（带可选动量）。
+struct GradientVQEOptions {
+    std::size_t max_iterations = 200;
+    double      learning_rate = 0.1;
+    double      tol = 1e-9;            // 梯度范数小于 tol 即收敛
+    std::vector<double> initial_parameters;  // 缺省为全 0
+};
+
+VQEResult vqe_gradient_descent(const Hamiltonian& hamiltonian,
+                               const ParametricCircuit& ansatz,
+                               const GradientVQEOptions& options = {});
 
 }  // namespace lqcs::algorithms

@@ -104,6 +104,12 @@ PYBIND11_MODULE(_pylqcs, m) {
         .def("rxx", &QuantumCircuit::rxx, rp)
         .def("ryy", &QuantumCircuit::ryy, rp)
         .def("rzz", &QuantumCircuit::rzz, rp)
+        .def("rp",
+             [](QuantumCircuit& qc, double theta, std::string_view pauli,
+                std::vector<qubit_t> qubits) -> QuantumCircuit& {
+                 return qc.rp(theta, pauli, qubits);
+             },
+             rp, "theta"_a, "pauli"_a, "qubits"_a)
         .def("unitary",
              [](QuantumCircuit& qc, const NpComplexArray& mat,
                 std::vector<qubit_t> qubits) -> QuantumCircuit& {
@@ -295,6 +301,44 @@ PYBIND11_MODULE(_pylqcs, m) {
         },
         "N"_a, "shots"_a = 64, "max_attempts"_a = 10, "seed"_a = py::none());
 
+    // —— ParametricCircuit（参数化电路，bind 不重建结构）——
+    auto pcrp = py::return_value_policy::reference_internal;
+    py::class_<ParametricCircuit>(m, "ParametricCircuit")
+        .def(py::init<std::size_t, std::size_t>(), "num_qubits"_a,
+             "num_clbits"_a = 0)
+        .def("x", &ParametricCircuit::x, pcrp)
+        .def("y", &ParametricCircuit::y, pcrp)
+        .def("z", &ParametricCircuit::z, pcrp)
+        .def("h", &ParametricCircuit::h, pcrp)
+        .def("s", &ParametricCircuit::s, pcrp)
+        .def("sdg", &ParametricCircuit::sdg, pcrp)
+        .def("t", &ParametricCircuit::t, pcrp)
+        .def("sx", &ParametricCircuit::sx, pcrp)
+        .def("cx", &ParametricCircuit::cx, pcrp)
+        .def("cy", &ParametricCircuit::cy, pcrp)
+        .def("cz", &ParametricCircuit::cz, pcrp)
+        .def("swap", &ParametricCircuit::swap, pcrp)
+        .def("ccx", &ParametricCircuit::ccx, pcrp)
+        .def("barrier", &ParametricCircuit::barrier, pcrp)
+        // 参数化门返回新参数索引
+        .def("rx", &ParametricCircuit::rx, "qubit"_a)
+        .def("ry", &ParametricCircuit::ry, "qubit"_a)
+        .def("rz", &ParametricCircuit::rz, "qubit"_a)
+        .def("rp",
+             [](ParametricCircuit& pc, std::string_view pauli,
+                std::vector<qubit_t> qubits) {
+                 return pc.rp(pauli, qubits);
+             },
+             "pauli"_a, "qubits"_a)
+        .def("bind",
+             [](const ParametricCircuit& pc, std::vector<double> values) {
+                 return pc.bind(values);
+             },
+             "values"_a)
+        .def("num_parameters", &ParametricCircuit::num_parameters)
+        .def("num_qubits", &ParametricCircuit::num_qubits)
+        .def("num_clbits", &ParametricCircuit::num_clbits);
+
     // —— VQE ——
     py::class_<VQEResult>(alg, "VQEResult")
         .def_readonly("energy", &VQEResult::energy)
@@ -327,6 +371,31 @@ PYBIND11_MODULE(_pylqcs, m) {
         },
         "hamiltonian"_a, "ansatz"_a, "n_params"_a, "max_iterations"_a = 100,
         "tol"_a = 1e-9, "initial_parameters"_a = std::vector<double>{});
+    alg.def(
+        "parameter_shift_gradient",
+        [](const std::vector<std::pair<double, std::string>>& terms,
+           const ParametricCircuit& ansatz, std::vector<double> params) {
+            Hamiltonian h;
+            for (const auto& [c, p] : terms) h.push_back({c, p});
+            return parameter_shift_gradient(h, ansatz, params);
+        },
+        "hamiltonian"_a, "ansatz"_a, "params"_a,
+        "analytic dE/dtheta via parameter-shift rule");
+    alg.def(
+        "vqe_gradient_descent",
+        [](const std::vector<std::pair<double, std::string>>& terms,
+           const ParametricCircuit& ansatz, std::size_t max_iterations,
+           double learning_rate, double tol,
+           std::vector<double> initial_parameters) {
+            Hamiltonian h;
+            for (const auto& [c, p] : terms) h.push_back({c, p});
+            return vqe_gradient_descent(
+                h, ansatz,
+                {max_iterations, learning_rate, tol, std::move(initial_parameters)});
+        },
+        "hamiltonian"_a, "ansatz"_a, "max_iterations"_a = 200,
+        "learning_rate"_a = 0.1, "tol"_a = 1e-9,
+        "initial_parameters"_a = std::vector<double>{});
 
     auto nt = alg.def_submodule("number_theory", "classical number theory");
     nt.def("gcd", &number_theory::gcd);

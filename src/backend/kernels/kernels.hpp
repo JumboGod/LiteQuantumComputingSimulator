@@ -42,6 +42,12 @@ void apply_controlled_permutation(complex_t* state, std::size_t n_amps,
                                   const qubit_t* targets, std::size_t n_targets,
                                   const std::size_t* perm);
 
+// 多比特 Pauli 旋转 exp(-iθ/2·P)：O(2^n) 振幅对变换，不构造稠密矩阵。
+// x_global/zy_global 为已映射到全局比特的 X/Y 位与 Z/Y 位掩码，n_y 为 Y 个数。
+void apply_pauli_rotation(complex_t* state, std::size_t n_amps,
+                          std::size_t x_global, std::size_t zy_global,
+                          unsigned n_y, double theta);
+
 // 按 Born 规则坍缩一个比特：random01 ∈ [0,1) 决定分支。
 // 原位投影并归一化，返回测量结果。
 bool collapse_qubit(complex_t* state, std::size_t n_amps, qubit_t q,

@@ -25,6 +25,10 @@
   噪声模型——逐 shot 按 ‖Kᵢ|ψ⟩‖² 采样 Kraus 分支，内存 O(2ⁿ)，
   含噪容量从密度矩阵的 13 比特提升到 26+ 比特；与密度矩阵精确解
   交叉验证统计一致
+- ✅ **M8 参数化电路 + 梯度**（对标 Qulacs）：多比特 Pauli 旋转门
+  exp(-iθ/2·P) 专用 O(2ⁿ) 内核（UCCSD ansatz 主力门）、ParametricCircuit
+  参数槽原位绑定（bind 不重建结构）、parameter-shift 解析梯度、
+  梯度下降 VQE
 
 实测性能（4 核容器，`benchmarks/lqcs_bench`）：26 比特单门 135~275 ms，
 QFT(24) 3.4 s，门融合对单比特门密集电路加速 5.3~5.7 倍。

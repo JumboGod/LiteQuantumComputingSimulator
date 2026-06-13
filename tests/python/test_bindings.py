@@ -217,6 +217,49 @@ def test_trajectory_noise_on_statevector_backend():
     assert sum(r.counts().values()) == 8
 
 
+def test_pauli_rotation_matches_rzz():
+    a = lq.QuantumCircuit(2)
+    a.h(0).rp(0.7, "ZZ", [0, 1])
+    b = lq.QuantumCircuit(2)
+    b.h(0).rzz(0.7, 0, 1)
+    sa = lq.StatevectorSimulator(fuse_gates=False).run_statevector(a).to_numpy()
+    sb = lq.StatevectorSimulator(fuse_gates=False).run_statevector(b).to_numpy()
+    np.testing.assert_allclose(sa, sb, atol=1e-12)
+
+
+def test_parametric_circuit_and_gradient_descent():
+    H2 = [
+        (-1.052373245772859, "II"),
+        (+0.39793742484318045, "IZ"),
+        (-0.39793742484318045, "ZI"),
+        (-0.01128010425623538, "ZZ"),
+        (+0.18093119978423156, "XX"),
+    ]
+    pc = lq.ParametricCircuit(2)
+    pc.x(0)
+    p = pc.ry(1)            # 参数索引 0
+    assert p == 0
+    pc.cx(1, 0)
+    assert pc.num_parameters() == 1
+
+    # parameter-shift 梯度 vs 有限差分
+    grad = lq.algorithms.parameter_shift_gradient(H2, pc, [0.3])
+    sim = lq.StatevectorSimulator()
+
+    def energy(theta):
+        return lq.algorithms.expectation(
+            sim.run_statevector(pc.bind(theta)), H2)
+
+    eps = 1e-6
+    fd = (energy([0.3 + eps]) - energy([0.3 - eps])) / (2 * eps)
+    assert grad[0] == pytest.approx(fd, abs=1e-5)
+
+    # 梯度下降收敛到 H2 基态
+    res = lq.algorithms.vqe_gradient_descent(
+        H2, pc, max_iterations=500, learning_rate=0.3, tol=1e-7)
+    assert res.energy == pytest.approx(-1.8572750302023824, abs=1e-5)
+
+
 def test_visualization_figures():
     matplotlib = pytest.importorskip("matplotlib")
     matplotlib.use("Agg")

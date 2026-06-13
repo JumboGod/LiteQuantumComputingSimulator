@@ -4,6 +4,7 @@
 #include <initializer_list>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #include "instruction.hpp"
@@ -60,6 +61,13 @@ public:
     QuantumCircuit& rxx(double theta, qubit_t a, qubit_t b);
     QuantumCircuit& ryy(double theta, qubit_t a, qubit_t b);
     QuantumCircuit& rzz(double theta, qubit_t a, qubit_t b);
+
+    // 多比特 Pauli 旋转 exp(-iθ/2·P)。pauli 串最右字符对应 qubits[0]
+    // （与 expectation_value 一致）。VQE/UCCSD ansatz 主力门。
+    QuantumCircuit& rp(double theta, std::string_view pauli,
+                       std::span<const qubit_t> qubits);
+    QuantumCircuit& rp(double theta, std::string_view pauli,
+                       std::initializer_list<qubit_t> qubits);
 
     // —— 自定义算符 ——
     // 任意幺正矩阵（行主序 2^k × 2^k，构造时校验幺正性，容差 1e-10）。

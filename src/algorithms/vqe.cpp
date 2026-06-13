@@ -65,4 +65,71 @@ VQEResult vqe(const Hamiltonian& hamiltonian, const Ansatz& ansatz,
     return result;
 }
 
+std::vector<double> parameter_shift_gradient(const Hamiltonian& hamiltonian,
+                                             const ParametricCircuit& ansatz,
+                                             std::span<const double> params) {
+    const std::size_t n = ansatz.num_parameters();
+    if (params.size() != n) {
+        throw std::invalid_argument(
+            "parameter_shift_gradient: params size must equal num_parameters");
+    }
+    StatevectorSimulator sim;
+    const auto energy = [&](const std::vector<double>& p) {
+        return expectation(sim.run_statevector(ansatz.bind(p)), hamiltonian);
+    };
+
+    constexpr double kHalfPi = std::numbers::pi / 2;
+    std::vector<double> theta(params.begin(), params.end());
+    std::vector<double> grad(n);
+    for (std::size_t k = 0; k < n; ++k) {
+        const double saved = theta[k];
+        theta[k] = saved + kHalfPi;
+        const double e_plus = energy(theta);
+        theta[k] = saved - kHalfPi;
+        const double e_minus = energy(theta);
+        theta[k] = saved;
+        grad[k] = 0.5 * (e_plus - e_minus);
+    }
+    return grad;
+}
+
+VQEResult vqe_gradient_descent(const Hamiltonian& hamiltonian,
+                               const ParametricCircuit& ansatz,
+                               const GradientVQEOptions& options) {
+    const std::size_t n = ansatz.num_parameters();
+    if (n == 0) {
+        throw std::invalid_argument("vqe_gradient_descent: ansatz has no parameters");
+    }
+    std::vector<double> theta = options.initial_parameters;
+    if (theta.empty()) {
+        theta.assign(n, 0.0);
+    } else if (theta.size() != n) {
+        throw std::invalid_argument(
+            "vqe_gradient_descent: initial_parameters size must equal "
+            "num_parameters");
+    }
+
+    StatevectorSimulator sim;
+    const auto energy = [&](const std::vector<double>& p) {
+        return expectation(sim.run_statevector(ansatz.bind(p)), hamiltonian);
+    };
+
+    VQEResult result;
+    for (std::size_t iter = 0; iter < options.max_iterations; ++iter) {
+        const auto grad = parameter_shift_gradient(hamiltonian, ansatz, theta);
+        double grad_norm = 0.0;
+        for (std::size_t k = 0; k < n; ++k) {
+            theta[k] -= options.learning_rate * grad[k];
+            grad_norm += grad[k] * grad[k];
+        }
+        result.history.push_back(energy(theta));
+        result.iterations = iter + 1;
+        if (std::sqrt(grad_norm) < options.tol) break;
+    }
+
+    result.energy = result.history.empty() ? energy(theta) : result.history.back();
+    result.parameters = std::move(theta);
+    return result;
+}
+
 }  // namespace lqcs::algorithms

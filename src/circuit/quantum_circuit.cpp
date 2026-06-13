@@ -187,6 +187,25 @@ QuantumCircuit& QuantumCircuit::rzz(double theta, qubit_t a, qubit_t b) {
     return add_gate({GateType::RZZ, {theta}}, {a, b});
 }
 
+QuantumCircuit& QuantumCircuit::rp(double theta, std::string_view pauli,
+                                   std::span<const qubit_t> qubits) {
+    if (pauli.empty() || pauli.size() != qubits.size()) {
+        throw std::invalid_argument(
+            "rp: pauli length must equal qubit count and be non-empty");
+    }
+    for (char c : pauli) {
+        if (c != 'I' && c != 'X' && c != 'Y' && c != 'Z') {
+            throw std::invalid_argument("rp: pauli must contain only I/X/Y/Z");
+        }
+    }
+    Gate g{GateType::PauliRotation, {theta}, 0, {}, {}, std::string(pauli)};
+    return add_gate(std::move(g), std::vector<qubit_t>(qubits.begin(), qubits.end()));
+}
+QuantumCircuit& QuantumCircuit::rp(double theta, std::string_view pauli,
+                                   std::initializer_list<qubit_t> qubits) {
+    return rp(theta, pauli, std::span<const qubit_t>(qubits.begin(), qubits.size()));
+}
+
 QuantumCircuit& QuantumCircuit::unitary(std::span<const complex_t> matrix,
                                         std::span<const qubit_t> qubits) {
     const std::size_t dim = std::size_t{1} << qubits.size();

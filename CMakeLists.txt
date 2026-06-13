@@ -29,6 +29,7 @@ add_library(lqcs STATIC
     src/algorithms/vqe.cpp
     src/circuit/gate.cpp
     src/circuit/quantum_circuit.cpp
+    src/circuit/parametric_circuit.cpp
     src/transpiler/gate_fusion.cpp
     src/transpiler/redundant_elimination.cpp
     src/backend/density_matrix.cpp
