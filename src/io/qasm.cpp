@@ -35,25 +35,24 @@ std::string params_str(const std::vector<double>& params) {
 std::string qasm_gate_name(const Gate& g) {
     const std::size_t nc = g.n_controls;
     switch (g.type) {
-        case GateType::I:   return nc == 0 ? "id" : "";
+        case GateType::I: return nc == 0 ? "id" : "";
         case GateType::X:
             return nc == 0 ? "x" : nc == 1 ? "cx" : nc == 2 ? "ccx" : "";
-        case GateType::Y:   return nc == 0 ? "y" : nc == 1 ? "cy" : "";
-        case GateType::Z:   return nc == 0 ? "z" : nc == 1 ? "cz" : "";
-        case GateType::H:   return nc == 0 ? "h" : nc == 1 ? "ch" : "";
-        case GateType::S:   return nc == 0 ? "s" : "";
+        case GateType::Y: return nc == 0 ? "y" : nc == 1 ? "cy" : "";
+        case GateType::Z: return nc == 0 ? "z" : nc == 1 ? "cz" : "";
+        case GateType::H: return nc == 0 ? "h" : nc == 1 ? "ch" : "";
+        case GateType::S: return nc == 0 ? "s" : "";
         case GateType::Sdg: return nc == 0 ? "sdg" : "";
-        case GateType::T:   return nc == 0 ? "t" : "";
+        case GateType::T: return nc == 0 ? "t" : "";
         case GateType::Tdg: return nc == 0 ? "tdg" : "";
-        case GateType::SX:  return nc == 0 ? "sx" : "";
-        case GateType::RX:  return nc == 0 ? "rx" : nc == 1 ? "crx" : "";
-        case GateType::RY:  return nc == 0 ? "ry" : nc == 1 ? "cry" : "";
-        case GateType::RZ:  return nc == 0 ? "rz" : nc == 1 ? "crz" : "";
-        case GateType::P:   return nc == 0 ? "u1" : nc == 1 ? "cu1" : "";
-        case GateType::U:   return nc == 0 ? "u3" : "";
-        case GateType::SWAP:
-            return nc == 0 ? "swap" : nc == 1 ? "cswap" : "";
-        default:            return "";
+        case GateType::SX: return nc == 0 ? "sx" : "";
+        case GateType::RX: return nc == 0 ? "rx" : nc == 1 ? "crx" : "";
+        case GateType::RY: return nc == 0 ? "ry" : nc == 1 ? "cry" : "";
+        case GateType::RZ: return nc == 0 ? "rz" : nc == 1 ? "crz" : "";
+        case GateType::P: return nc == 0 ? "u1" : nc == 1 ? "cu1" : "";
+        case GateType::U: return nc == 0 ? "u3" : "";
+        case GateType::SWAP: return nc == 0 ? "swap" : nc == 1 ? "cswap" : "";
+        default: return "";
     }
 }
 
@@ -105,7 +104,7 @@ namespace {
 
 // 极简词法/语法分析器：覆盖 to_qasm 输出与 Qiskit 常见导出子集
 class Parser {
-public:
+   public:
     explicit Parser(std::string_view src) : src_(src) {}
 
     QuantumCircuit parse() {
@@ -123,7 +122,7 @@ public:
         return std::move(*circuit_);
     }
 
-private:
+   private:
     // —— 词法 ——
     void skip_ws() {
         while (pos_ < src_.size()) {
@@ -188,18 +187,24 @@ private:
         double v = parse_term();
         while (true) {
             skip_ws();
-            if (consume('+')) v += parse_term();
-            else if (consume('-')) v -= parse_term();
-            else return v;
+            if (consume('+'))
+                v += parse_term();
+            else if (consume('-'))
+                v -= parse_term();
+            else
+                return v;
         }
     }
     double parse_term() {
         double v = parse_factor();
         while (true) {
             skip_ws();
-            if (consume('*')) v *= parse_factor();
-            else if (consume('/')) v /= parse_factor();
-            else return v;
+            if (consume('*'))
+                v *= parse_factor();
+            else if (consume('/'))
+                v /= parse_factor();
+            else
+                return v;
         }
     }
     double parse_factor() {
@@ -330,19 +335,58 @@ private:
                     const std::vector<qubit_t>& q) {
         QuantumCircuit& qc = *circuit_;
         // (门名, 参数个数, 比特数) → 电路调用
-        if (name == "id" && q.size() == 1) { qc.i(q[0]); return; }
-        if (name == "x" && q.size() == 1) { qc.x(q[0]); return; }
-        if (name == "y" && q.size() == 1) { qc.y(q[0]); return; }
-        if (name == "z" && q.size() == 1) { qc.z(q[0]); return; }
-        if (name == "h" && q.size() == 1) { qc.h(q[0]); return; }
-        if (name == "s" && q.size() == 1) { qc.s(q[0]); return; }
-        if (name == "sdg" && q.size() == 1) { qc.sdg(q[0]); return; }
-        if (name == "t" && q.size() == 1) { qc.t(q[0]); return; }
-        if (name == "tdg" && q.size() == 1) { qc.tdg(q[0]); return; }
-        if (name == "sx" && q.size() == 1) { qc.sx(q[0]); return; }
-        if (name == "rx" && p.size() == 1 && q.size() == 1) { qc.rx(p[0], q[0]); return; }
-        if (name == "ry" && p.size() == 1 && q.size() == 1) { qc.ry(p[0], q[0]); return; }
-        if (name == "rz" && p.size() == 1 && q.size() == 1) { qc.rz(p[0], q[0]); return; }
+        if (name == "id" && q.size() == 1) {
+            qc.i(q[0]);
+            return;
+        }
+        if (name == "x" && q.size() == 1) {
+            qc.x(q[0]);
+            return;
+        }
+        if (name == "y" && q.size() == 1) {
+            qc.y(q[0]);
+            return;
+        }
+        if (name == "z" && q.size() == 1) {
+            qc.z(q[0]);
+            return;
+        }
+        if (name == "h" && q.size() == 1) {
+            qc.h(q[0]);
+            return;
+        }
+        if (name == "s" && q.size() == 1) {
+            qc.s(q[0]);
+            return;
+        }
+        if (name == "sdg" && q.size() == 1) {
+            qc.sdg(q[0]);
+            return;
+        }
+        if (name == "t" && q.size() == 1) {
+            qc.t(q[0]);
+            return;
+        }
+        if (name == "tdg" && q.size() == 1) {
+            qc.tdg(q[0]);
+            return;
+        }
+        if (name == "sx" && q.size() == 1) {
+            qc.sx(q[0]);
+            return;
+        }
+        if (name == "rx" && p.size() == 1 && q.size() == 1) {
+            qc.rx(p[0], q[0]);
+            return;
+        }
+        if (name == "ry" && p.size() == 1 && q.size() == 1) {
+            qc.ry(p[0], q[0]);
+            return;
+        }
+        if (name == "rz" && p.size() == 1 && q.size() == 1) {
+            qc.rz(p[0], q[0]);
+            return;
+        }
         if ((name == "p" || name == "u1") && p.size() == 1 && q.size() == 1) {
             qc.p(p[0], q[0]);
             return;
@@ -355,22 +399,53 @@ private:
             qc.u(p[0], p[1], p[2], q[0]);
             return;
         }
-        if (name == "cx" && q.size() == 2) { qc.cx(q[0], q[1]); return; }
-        if (name == "cy" && q.size() == 2) { qc.cy(q[0], q[1]); return; }
-        if (name == "cz" && q.size() == 2) { qc.cz(q[0], q[1]); return; }
-        if (name == "ch" && q.size() == 2) { qc.ch(q[0], q[1]); return; }
+        if (name == "cx" && q.size() == 2) {
+            qc.cx(q[0], q[1]);
+            return;
+        }
+        if (name == "cy" && q.size() == 2) {
+            qc.cy(q[0], q[1]);
+            return;
+        }
+        if (name == "cz" && q.size() == 2) {
+            qc.cz(q[0], q[1]);
+            return;
+        }
+        if (name == "ch" && q.size() == 2) {
+            qc.ch(q[0], q[1]);
+            return;
+        }
         if ((name == "cp" || name == "cu1") && p.size() == 1 && q.size() == 2) {
             qc.cp(p[0], q[0], q[1]);
             return;
         }
-        if (name == "crx" && p.size() == 1 && q.size() == 2) { qc.crx(p[0], q[0], q[1]); return; }
-        if (name == "cry" && p.size() == 1 && q.size() == 2) { qc.cry(p[0], q[0], q[1]); return; }
-        if (name == "crz" && p.size() == 1 && q.size() == 2) { qc.crz(p[0], q[0], q[1]); return; }
-        if (name == "swap" && q.size() == 2) { qc.swap(q[0], q[1]); return; }
-        if (name == "ccx" && q.size() == 3) { qc.ccx(q[0], q[1], q[2]); return; }
-        if (name == "cswap" && q.size() == 3) { qc.cswap(q[0], q[1], q[2]); return; }
-        fail("unsupported gate '" + name + "' with " + std::to_string(p.size()) +
-             " params / " + std::to_string(q.size()) + " qubits");
+        if (name == "crx" && p.size() == 1 && q.size() == 2) {
+            qc.crx(p[0], q[0], q[1]);
+            return;
+        }
+        if (name == "cry" && p.size() == 1 && q.size() == 2) {
+            qc.cry(p[0], q[0], q[1]);
+            return;
+        }
+        if (name == "crz" && p.size() == 1 && q.size() == 2) {
+            qc.crz(p[0], q[0], q[1]);
+            return;
+        }
+        if (name == "swap" && q.size() == 2) {
+            qc.swap(q[0], q[1]);
+            return;
+        }
+        if (name == "ccx" && q.size() == 3) {
+            qc.ccx(q[0], q[1], q[2]);
+            return;
+        }
+        if (name == "cswap" && q.size() == 3) {
+            qc.cswap(q[0], q[1], q[2]);
+            return;
+        }
+        fail("unsupported gate '" + name + "' with " +
+             std::to_string(p.size()) + " params / " +
+             std::to_string(q.size()) + " qubits");
     }
 
     void make_circuit() {

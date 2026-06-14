@@ -41,7 +41,8 @@ int main() {
     StatevectorSimulator sim;
     Result result = sim.run(qc, 1024);
 
-    std::cout << "Grover search for |101> in 3 qubits, 2 iterations, 1024 shots:\n";
+    std::cout
+        << "Grover search for |101> in 3 qubits, 2 iterations, 1024 shots:\n";
     result.print_counts();
     std::cout << "(theory: P(101) ~ 94.5%)\n";
     return 0;

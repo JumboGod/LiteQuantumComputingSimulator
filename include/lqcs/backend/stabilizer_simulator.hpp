@@ -13,7 +13,7 @@ namespace lqcs {
 // 适用于量子纠错码、GHZ/图态、随机 Clifford 基准等。
 // 遇到非 Clifford 门（T、任意角旋转、Toffoli）抛异常。
 class StabilizerSimulator final : public Backend {
-public:
+   public:
     struct Options {
         std::optional<std::uint64_t> seed;
     };
@@ -21,13 +21,14 @@ public:
     StabilizerSimulator() = default;
     explicit StabilizerSimulator(Options options) : options_(options) {}
 
-    Result run(const QuantumCircuit& circuit, std::size_t shots = 1024) override;
+    Result run(const QuantumCircuit& circuit,
+               std::size_t shots = 1024) override;
     std::string name() const override { return "stabilizer_simulator"; }
 
     // 演化一次并返回末态 tableau（含中间测量的随机坍缩）
     StabilizerTableau run_tableau(const QuantumCircuit& circuit) const;
 
-private:
+   private:
     Options options_;
 };
 

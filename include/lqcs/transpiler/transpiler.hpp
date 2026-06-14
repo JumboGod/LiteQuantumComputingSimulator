@@ -9,7 +9,7 @@ namespace lqcs {
 
 // Pass 管线：按注册顺序依次应用
 class Transpiler {
-public:
+   public:
     Transpiler& add_pass(std::unique_ptr<Pass> pass) {
         passes_.push_back(std::move(pass));
         return *this;
@@ -25,7 +25,7 @@ public:
 
     std::size_t num_passes() const { return passes_.size(); }
 
-private:
+   private:
     std::vector<std::unique_ptr<Pass>> passes_;
 };
 

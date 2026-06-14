@@ -36,7 +36,8 @@ void bench_single_gates(std::size_t n) {
     const double cx = bench_gate(n, [&](auto& qc) { qc.cx(lo, hi); });
     const double ccx = bench_gate(n, [&](auto& qc) { qc.ccx(lo, 1, hi); });
     std::printf(
-        "n=%2zu  | H(q0) %8.2f | H(q%zu) %8.2f | T %8.2f | CX %8.2f | CCX %8.2f\n",
+        "n=%2zu  | H(q0) %8.2f | H(q%zu) %8.2f | T %8.2f | CX %8.2f | CCX "
+        "%8.2f\n",
         n, h_lo, n - 1, h_hi, t_diag, cx, ccx);
 }
 
@@ -77,10 +78,10 @@ void bench_fusion(std::size_t n, std::size_t gates_per_qubit) {
         return ms_since(t0);
     };
     const double t_plain = bench(StatevectorSimulator({.fuse_gates = false}));
-    const double t_1q =
-        bench(StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 1}));
-    const double t_k =
-        bench(StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 4}));
+    const double t_1q = bench(
+        StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 1}));
+    const double t_k = bench(
+        StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 4}));
 
     std::printf(
         "fusion n=%zu (%zu gates): plain %.1f ms | 1-qubit %.1f ms (%.2fx) | "

@@ -7,9 +7,9 @@
 namespace lqcs::algorithms {
 
 struct QPEResult {
-    double        phase;       // 估计的相位 φ ∈ [0, 1)
-    std::uint64_t measured;    // 计数寄存器最可能的读数 m（φ ≈ m / 2^t）
-    std::size_t   n_counting;
+    double phase;            // 估计的相位 φ ∈ [0, 1)
+    std::uint64_t measured;  // 计数寄存器最可能的读数 m（φ ≈ m / 2^t）
+    std::size_t n_counting;
     QuantumCircuit circuit;
 };
 

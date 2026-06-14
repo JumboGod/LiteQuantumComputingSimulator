@@ -9,8 +9,8 @@
 namespace lqcs::algorithms {
 
 struct SimonResult {
-    std::uint64_t secret;          // 恢复出的周期串 s（f(x) = f(x ⊕ s)）
-    std::size_t   quantum_samples; // 实际使用的量子采样数
+    std::uint64_t secret;  // 恢复出的周期串 s（f(x) = f(x ⊕ s)）
+    std::size_t quantum_samples;  // 实际使用的量子采样数
     QuantumCircuit circuit;
 };
 

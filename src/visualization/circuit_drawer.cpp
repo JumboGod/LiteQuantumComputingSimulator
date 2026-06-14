@@ -84,9 +84,10 @@ std::string QuantumCircuit::draw() const {
             }
             const bool is_swap = (g.type == GateType::SWAP);
             const std::string label =
-                is_swap ? "x"
-                        : "[" + Gate{g.type, g.params, 0, g.mat, g.perm}.name() +
-                              format_params(g.params) + "]";
+                is_swap
+                    ? "x"
+                    : "[" + Gate{g.type, g.params, 0, g.mat, g.perm}.name() +
+                          format_params(g.params) + "]";
             for (std::size_t j = g.n_controls; j < inst.qubits.size(); ++j) {
                 cells[2 * inst.qubits[j]] = label;
             }
@@ -119,7 +120,8 @@ std::string QuantumCircuit::draw() const {
     std::string out;
     for (std::size_t r = 0; r < n_rows; ++r) {
         // 连接线行全空白时跳过，让图更紧凑
-        if (r % 2 == 1 && lines[r].find_first_not_of(' ') == std::string::npos) {
+        if (r % 2 == 1 &&
+            lines[r].find_first_not_of(' ') == std::string::npos) {
             continue;
         }
         out += lines[r];

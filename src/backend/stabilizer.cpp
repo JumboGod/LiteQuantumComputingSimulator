@@ -7,7 +7,8 @@ namespace lqcs {
 
 StabilizerTableau::StabilizerTableau(std::size_t num_qubits) : n_(num_qubits) {
     if (num_qubits == 0) {
-        throw std::invalid_argument("StabilizerTableau: num_qubits must be >= 1");
+        throw std::invalid_argument(
+            "StabilizerTableau: num_qubits must be >= 1");
     }
     const std::size_t rows = 2 * n_ + 1;  // 含 scratch 行
     xs_.assign(rows * n_, 0);
@@ -103,7 +104,8 @@ void StabilizerTableau::rowsum(std::size_t h, std::size_t i) {
     auto g = [](std::uint8_t x1, std::uint8_t z1, std::uint8_t x2,
                 std::uint8_t z2) -> int {
         if (x1 == 0 && z1 == 0) return 0;
-        if (x1 == 1 && z1 == 1) return static_cast<int>(z2) - static_cast<int>(x2);
+        if (x1 == 1 && z1 == 1)
+            return static_cast<int>(z2) - static_cast<int>(x2);
         if (x1 == 1 && z1 == 0) return z2 * (2 * x2 - 1);
         return x2 * (1 - 2 * z2);  // x1==0, z1==1
     };
@@ -125,7 +127,11 @@ bool StabilizerTableau::measure(qubit_t a, double random01) {
     std::size_t p = 2 * n_;
     bool found = false;
     for (std::size_t i = n_; i < 2 * n_; ++i) {
-        if (xat(i, a)) { p = i; found = true; break; }
+        if (xat(i, a)) {
+            p = i;
+            found = true;
+            break;
+        }
     }
 
     if (found) {
@@ -141,7 +147,10 @@ bool StabilizerTableau::measure(qubit_t a, double random01) {
         }
         rs_[d] = rs_[p];
         // 行 p ← Z_a，符号为随机测量结果
-        for (std::size_t j = 0; j < n_; ++j) { xat(p, j) = 0; zat(p, j) = 0; }
+        for (std::size_t j = 0; j < n_; ++j) {
+            xat(p, j) = 0;
+            zat(p, j) = 0;
+        }
         zat(p, a) = 1;
         const std::uint8_t outcome = (random01 < 0.5) ? 0 : 1;
         rs_[p] = outcome;
@@ -150,7 +159,10 @@ bool StabilizerTableau::measure(qubit_t a, double random01) {
 
     // 确定性结果：用 scratch 行 2n
     const std::size_t scratch = 2 * n_;
-    for (std::size_t j = 0; j < n_; ++j) { xat(scratch, j) = 0; zat(scratch, j) = 0; }
+    for (std::size_t j = 0; j < n_; ++j) {
+        xat(scratch, j) = 0;
+        zat(scratch, j) = 0;
+    }
     rs_[scratch] = 0;
     for (std::size_t i = 0; i < n_; ++i) {
         if (xat(i, a)) rowsum(scratch, i + n_);
@@ -174,10 +186,8 @@ bool StabilizerTableau::is_clifford(const Gate& g) {
             case GateType::S:
             case GateType::Sdg:
             case GateType::SX:
-            case GateType::SWAP:
-                return true;
-            default:
-                return false;
+            case GateType::SWAP: return true;
+            default: return false;
         }
     }
     if (g.n_controls == 1) {

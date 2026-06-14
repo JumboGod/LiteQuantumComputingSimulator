@@ -15,23 +15,21 @@ StabilizerTableau StabilizerSimulator::run_tableau(
     StabilizerTableau tab(circuit.num_qubits());
     for (const auto& inst : circuit.instructions()) {
         switch (inst.gate.type) {
-            case GateType::Barrier:
-                break;
+            case GateType::Barrier: break;
             case GateType::Measure:
                 tab.measure(inst.qubits[0], rng.uniform());
                 break;
             case GateType::Reset:
                 tab.reset(inst.qubits[0], rng.uniform());
                 break;
-            default:
-                tab.apply(inst);
-                break;
+            default: tab.apply(inst); break;
         }
     }
     return tab;
 }
 
-Result StabilizerSimulator::run(const QuantumCircuit& circuit, std::size_t shots) {
+Result StabilizerSimulator::run(const QuantumCircuit& circuit,
+                                std::size_t shots) {
     if (shots == 0) {
         throw std::invalid_argument("run: shots must be >= 1");
     }
@@ -39,7 +37,8 @@ Result StabilizerSimulator::run(const QuantumCircuit& circuit, std::size_t shots
     for (const auto& inst : circuit.instructions()) {
         const auto t = inst.gate.type;
         if (t != GateType::Measure && t != GateType::Reset &&
-            t != GateType::Barrier && !StabilizerTableau::is_clifford(inst.gate)) {
+            t != GateType::Barrier &&
+            !StabilizerTableau::is_clifford(inst.gate)) {
             throw std::invalid_argument(
                 "StabilizerSimulator: non-Clifford gate '" + inst.gate.name() +
                 "'");
@@ -48,7 +47,10 @@ Result StabilizerSimulator::run(const QuantumCircuit& circuit, std::size_t shots
 
     bool has_measure = false;
     for (const auto& inst : circuit.instructions()) {
-        if (inst.gate.type == GateType::Measure) { has_measure = true; break; }
+        if (inst.gate.type == GateType::Measure) {
+            has_measure = true;
+            break;
+        }
     }
     if (!has_measure) {
         throw std::invalid_argument(
@@ -66,8 +68,7 @@ Result StabilizerSimulator::run(const QuantumCircuit& circuit, std::size_t shots
         std::vector<bool> creg(n_clbits, false);
         for (const auto& inst : circuit.instructions()) {
             switch (inst.gate.type) {
-                case GateType::Barrier:
-                    break;
+                case GateType::Barrier: break;
                 case GateType::Measure:
                     creg[inst.clbits[0]] =
                         tab.measure(inst.qubits[0], rng.uniform());
@@ -75,9 +76,7 @@ Result StabilizerSimulator::run(const QuantumCircuit& circuit, std::size_t shots
                 case GateType::Reset:
                     tab.reset(inst.qubits[0], rng.uniform());
                     break;
-                default:
-                    tab.apply(inst);
-                    break;
+                default: tab.apply(inst); break;
             }
         }
         for (std::size_t c = 0; c < n_clbits; ++c) {

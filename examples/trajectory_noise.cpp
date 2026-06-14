@@ -31,8 +31,9 @@ int main() {
                    .run_density_matrix(bell);
     const auto exact = rho.probabilities();
 
-    std::printf("Bell + depolarizing(p=%.2f): trajectory (%zu shots) vs exact\n",
-                p, shots);
+    std::printf(
+        "Bell + depolarizing(p=%.2f): trajectory (%zu shots) vs exact\n", p,
+        shots);
     std::printf("  state   trajectory   density-matrix\n");
     const char* labels[4] = {"00", "01", "10", "11"};
     for (int i = 0; i < 4; ++i) {
@@ -46,8 +47,10 @@ int main() {
 
     // —— 2. 大规模含噪：16 比特 GHZ 噪声扫描 ——
     const std::size_t n = 16;
-    std::printf("\nGHZ(%zu) under depolarizing noise (O(2^n) trajectory method;\n"
-                "density matrix would need O(4^n) = 64 TiB):\n", n);
+    std::printf(
+        "\nGHZ(%zu) under depolarizing noise (O(2^n) trajectory method;\n"
+        "density matrix would need O(4^n) = 64 TiB):\n",
+        n);
     std::printf("  p        P(all-0) + P(all-1)\n");
     const std::string zeros(n, '0'), ones(n, '1');
     for (const double pn : {0.0, 0.002, 0.01, 0.03}) {

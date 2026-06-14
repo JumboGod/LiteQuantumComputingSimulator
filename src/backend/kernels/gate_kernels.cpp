@@ -13,8 +13,9 @@ namespace lqcs::kernels {
 
 namespace {
 
-// 小于该规模不并行：线程启动开销超过收益
-constexpr std::size_t kParallelThreshold = std::size_t{1} << 14;
+// 小于该规模不并行：线程启动开销超过收益（仅 OpenMP 的 if 子句引用，
+// 无 OpenMP 构建时该常量未被使用，故标注 maybe_unused）
+[[maybe_unused]] constexpr std::size_t kParallelThreshold = std::size_t{1} << 14;
 
 // 把固定比特位置（升序）之外的紧凑编号 g 展开成这些位置为 0 的完整下标
 std::size_t expand(std::size_t g, const std::vector<unsigned>& sorted_positions) {

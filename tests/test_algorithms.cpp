@@ -84,8 +84,10 @@ TEST(QPE, ExactPhaseForTGate) {
 TEST(QPE, ExactPhaseForSAndZ) {
     QuantumCircuit prep(1);
     prep.x(0);
-    EXPECT_DOUBLE_EQ(phase_estimation(Gate{GateType::S, {}}, prep, 4).phase, 0.25);
-    EXPECT_DOUBLE_EQ(phase_estimation(Gate{GateType::Z, {}}, prep, 2).phase, 0.5);
+    EXPECT_DOUBLE_EQ(phase_estimation(Gate{GateType::S, {}}, prep, 4).phase,
+                     0.25);
+    EXPECT_DOUBLE_EQ(phase_estimation(Gate{GateType::Z, {}}, prep, 2).phase,
+                     0.5);
 }
 
 TEST(QPE, ApproximatesIrrationalPhase) {
@@ -102,7 +104,8 @@ TEST(QPE, TwoQubitUnitary) {
     // CZ 的本征态 |11>，本征值 -1 → φ = 1/2
     QuantumCircuit prep(2);
     prep.x(0).x(1);
-    auto res = phase_estimation(Gate{GateType::RZZ, {std::numbers::pi}}, prep, 3);
+    auto res =
+        phase_estimation(Gate{GateType::RZZ, {std::numbers::pi}}, prep, 3);
     // RZZ(π)|11> = e^{-iπ/2}|11> → φ = 3/4
     EXPECT_DOUBLE_EQ(res.phase, 0.75);
 }
@@ -148,9 +151,10 @@ TEST(AlgorithmsQFT, LibraryQftMatchesAnalytic) {
     auto sv = StatevectorSimulator().run_statevector(qc);
     const std::size_t dim = 1u << n;
     for (std::size_t k = 0; k < dim; ++k) {
-        const double ph = 2.0 * std::numbers::pi * static_cast<double>(x * k) / dim;
-        const complex_t expected =
-            complex_t{std::cos(ph), std::sin(ph)} / std::sqrt(static_cast<double>(dim));
+        const double ph =
+            2.0 * std::numbers::pi * static_cast<double>(x * k) / dim;
+        const complex_t expected = complex_t{std::cos(ph), std::sin(ph)} /
+                                   std::sqrt(static_cast<double>(dim));
         EXPECT_NEAR(std::abs(sv[k] - expected), 0.0, 1e-12) << "k=" << k;
     }
 }

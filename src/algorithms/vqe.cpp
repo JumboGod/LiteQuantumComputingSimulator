@@ -49,8 +49,9 @@ VQEResult vqe(const Hamiltonian& hamiltonian, const Ansatz& ansatz,
             theta[k] = saved - kHalfPi;
             const double e_minus = energy(theta);
 
-            theta[k] = saved - kHalfPi -
-                       std::atan2(2.0 * e0 - e_plus - e_minus, e_plus - e_minus);
+            theta[k] =
+                saved - kHalfPi -
+                std::atan2(2.0 * e0 - e_plus - e_minus, e_plus - e_minus);
             // 折回 (-π, π]，避免参数无界漂移
             theta[k] = std::remainder(theta[k], 2 * std::numbers::pi);
             current = energy(theta);
@@ -98,7 +99,8 @@ VQEResult vqe_gradient_descent(const Hamiltonian& hamiltonian,
                                const GradientVQEOptions& options) {
     const std::size_t n = ansatz.num_parameters();
     if (n == 0) {
-        throw std::invalid_argument("vqe_gradient_descent: ansatz has no parameters");
+        throw std::invalid_argument(
+            "vqe_gradient_descent: ansatz has no parameters");
     }
     std::vector<double> theta = options.initial_parameters;
     if (theta.empty()) {
@@ -127,7 +129,8 @@ VQEResult vqe_gradient_descent(const Hamiltonian& hamiltonian,
         if (std::sqrt(grad_norm) < options.tol) break;
     }
 
-    result.energy = result.history.empty() ? energy(theta) : result.history.back();
+    result.energy =
+        result.history.empty() ? energy(theta) : result.history.back();
     result.parameters = std::move(theta);
     return result;
 }

@@ -8,11 +8,12 @@ TEST(NumberTheory, GcdAndPowMod) {
     EXPECT_EQ(gcd(48, 18), 6u);
     EXPECT_EQ(gcd(17, 5), 1u);
     EXPECT_EQ(gcd(0, 7), 7u);
-    EXPECT_EQ(pow_mod(7, 4, 15), 1u);    // 7 的阶是 4 (mod 15)
+    EXPECT_EQ(pow_mod(7, 4, 15), 1u);  // 7 的阶是 4 (mod 15)
     EXPECT_EQ(pow_mod(2, 10, 1000), 24u);
     EXPECT_EQ(pow_mod(5, 0, 13), 1u);
     // 大数不溢出（mul_mod 用 128 位中间结果或双倍-累加）
-    // 0xFFFFFFFF^2 = 0xFFFFFFFE00000001；对 0xFFFFFFFFFFFF 取模 = 0xFFFE00010000
+    // 0xFFFFFFFF^2 = 0xFFFFFFFE00000001；对 0xFFFFFFFFFFFF 取模 =
+    // 0xFFFE00010000
     EXPECT_EQ(mul_mod(0xFFFFFFFFULL, 0xFFFFFFFFULL, 0xFFFFFFFFFFFFULL),
               0xFFFE00010000ULL);
 }
@@ -27,9 +28,9 @@ TEST(NumberTheory, Primality) {
 }
 
 TEST(NumberTheory, PerfectPower) {
-    EXPECT_EQ(perfect_power_base(8), 2u);    // 2^3
-    EXPECT_EQ(perfect_power_base(27), 3u);   // 3^3
-    EXPECT_EQ(perfect_power_base(49), 7u);   // 7^2
+    EXPECT_EQ(perfect_power_base(8), 2u);   // 2^3
+    EXPECT_EQ(perfect_power_base(27), 3u);  // 3^3
+    EXPECT_EQ(perfect_power_base(49), 7u);  // 7^2
     EXPECT_EQ(perfect_power_base(15), 0u);
     EXPECT_EQ(perfect_power_base(21), 0u);
 }

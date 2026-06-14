@@ -28,7 +28,7 @@ TEST(Expectation, ComputationalBasisStates) {
 }
 
 TEST(Expectation, SuperpositionAndPhase) {
-    {   // |+>：<X> = 1，<Z> = 0
+    {  // |+>：<X> = 1，<Z> = 0
         QuantumCircuit qc(1);
         qc.h(0);
         auto sv = prepare(qc);
@@ -36,7 +36,7 @@ TEST(Expectation, SuperpositionAndPhase) {
         EXPECT_NEAR(sv.expectation_value("Z"), 0.0, kTol);
         EXPECT_NEAR(sv.expectation_value("Y"), 0.0, kTol);
     }
-    {   // |+i> = S·H|0>：<Y> = 1
+    {  // |+i> = S·H|0>：<Y> = 1
         QuantumCircuit qc(1);
         qc.h(0).s(0);
         auto sv = prepare(qc);
@@ -79,6 +79,6 @@ TEST(Expectation, HamiltonianAggregation) {
 
 TEST(Expectation, RejectsInvalidInput) {
     Statevector sv(2);
-    EXPECT_THROW(sv.expectation_value("Z"), std::invalid_argument);     // 长度
-    EXPECT_THROW(sv.expectation_value("ZA"), std::invalid_argument);    // 字符
+    EXPECT_THROW(sv.expectation_value("Z"), std::invalid_argument);   // 长度
+    EXPECT_THROW(sv.expectation_value("ZA"), std::invalid_argument);  // 字符
 }

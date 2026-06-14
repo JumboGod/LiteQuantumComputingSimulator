@@ -8,7 +8,7 @@ namespace lqcs {
 // RZ(θ)·RZ(-θ)…）。"相邻"指两门作用于完全相同的比特列表，且其间
 // 没有任何触及这些比特的指令。迭代到不动点（处理级联，如 X H H X）。
 class RedundantGateElimination final : public Pass {
-public:
+   public:
     QuantumCircuit run(const QuantumCircuit& circuit) const override;
     std::string name() const override { return "redundant_gate_elimination"; }
 };

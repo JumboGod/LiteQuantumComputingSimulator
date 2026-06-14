@@ -35,13 +35,21 @@ QuantumCircuit random_circuit(std::size_t n, std::size_t n_gates,
             case 2: qc.rx(angle(rng), q); break;
             case 3: qc.u(angle(rng), angle(rng), angle(rng), q); break;
             case 4: qc.sx(q); break;
-            case 5: { auto b = static_cast<qubit_t>((q + 1) % n); qc.cx(q, b); } break;
-            case 6: { auto b = static_cast<qubit_t>((q + 1) % n); qc.cp(angle(rng), q, b); } break;
+            case 5: {
+                auto b = static_cast<qubit_t>((q + 1) % n);
+                qc.cx(q, b);
+            } break;
+            case 6: {
+                auto b = static_cast<qubit_t>((q + 1) % n);
+                qc.cp(angle(rng), q, b);
+            } break;
             default: {
                 auto b = static_cast<qubit_t>((q + 1) % n);
                 auto c = static_cast<qubit_t>((q + 2) % n);
-                if (q != b && b != c && q != c) qc.ccx(q, b, c);
-                else qc.h(q);
+                if (q != b && b != c && q != c)
+                    qc.ccx(q, b, c);
+                else
+                    qc.h(q);
                 break;
             }
         }
@@ -135,7 +143,9 @@ TEST(GateFusion, SimulatorResultsIndependentOfBlockSize) {
         StatevectorSimulator sim(
             {.seed = 5, .fuse_gates = true, .fusion_max_qubits = mb});
         auto r = sim.run(qc, 1024);
-        if (mb == 1) ref = r;
-        else EXPECT_EQ(r.counts(), ref.counts()) << "block size " << mb;
+        if (mb == 1)
+            ref = r;
+        else
+            EXPECT_EQ(r.counts(), ref.counts()) << "block size " << mb;
     }
 }

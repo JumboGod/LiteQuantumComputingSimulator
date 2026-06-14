@@ -15,8 +15,8 @@ std::uint64_t gcd(std::uint64_t a, std::uint64_t b) {
 
 std::uint64_t mul_mod(std::uint64_t a, std::uint64_t b, std::uint64_t mod) {
 #ifdef __SIZEOF_INT128__
-    return static_cast<std::uint64_t>(
-        static_cast<unsigned __int128>(a) * b % mod);
+    return static_cast<std::uint64_t>(static_cast<unsigned __int128>(a) * b %
+                                      mod);
 #else
     // MSVC 无 128 位整型：双倍-累加（俄国农民乘法），O(64) 次迭代
     std::uint64_t result = 0;
@@ -30,7 +30,8 @@ std::uint64_t mul_mod(std::uint64_t a, std::uint64_t b, std::uint64_t mod) {
 #endif
 }
 
-std::uint64_t pow_mod(std::uint64_t base, std::uint64_t exp, std::uint64_t mod) {
+std::uint64_t pow_mod(std::uint64_t base, std::uint64_t exp,
+                      std::uint64_t mod) {
     std::uint64_t result = 1 % mod;
     base %= mod;
     while (exp > 0) {
@@ -60,7 +61,10 @@ std::uint64_t perfect_power_base(std::uint64_t n) {
             std::uint64_t p = 1;
             bool overflow = false;
             for (unsigned i = 0; i < k; ++i) {
-                if (p > n / cand) { overflow = true; break; }
+                if (p > n / cand) {
+                    overflow = true;
+                    break;
+                }
                 p *= cand;
             }
             if (!overflow && p == n) return cand;

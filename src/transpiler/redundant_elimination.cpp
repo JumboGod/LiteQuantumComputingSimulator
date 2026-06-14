@@ -7,7 +7,8 @@ namespace lqcs {
 
 namespace {
 
-bool params_negated(const std::vector<double>& a, const std::vector<double>& b) {
+bool params_negated(const std::vector<double>& a,
+                    const std::vector<double>& b) {
     return a.size() == 1 && b.size() == 1 && a[0] == -b[0];
 }
 
@@ -21,8 +22,7 @@ bool is_inverse_pair(const Gate& a, const Gate& b) {
         case GateType::Y:
         case GateType::Z:
         case GateType::H:
-        case GateType::SWAP:
-            return b.type == a.type;
+        case GateType::SWAP: return b.type == a.type;
         // 参数互为相反数
         case GateType::RX:
         case GateType::RY:
@@ -32,9 +32,9 @@ bool is_inverse_pair(const Gate& a, const Gate& b) {
         case GateType::RYY:
         case GateType::RZZ:
             return b.type == a.type && params_negated(a.params, b.params);
-        case GateType::S:   return b.type == GateType::Sdg;
+        case GateType::S: return b.type == GateType::Sdg;
         case GateType::Sdg: return b.type == GateType::S;
-        case GateType::T:   return b.type == GateType::Tdg;
+        case GateType::T: return b.type == GateType::Tdg;
         case GateType::Tdg: return b.type == GateType::T;
         case GateType::U:
             return b.type == GateType::U && a.params.size() == 3 &&
@@ -50,14 +50,14 @@ bool is_inverse_pair(const Gate& a, const Gate& b) {
             }
             return true;
         }
-        default:
-            return false;  // SX/iSWAP/Unitary：留给门融合处理
+        default: return false;  // SX/iSWAP/Unitary：留给门融合处理
     }
 }
 
 }  // namespace
 
-QuantumCircuit RedundantGateElimination::run(const QuantumCircuit& circuit) const {
+QuantumCircuit RedundantGateElimination::run(
+    const QuantumCircuit& circuit) const {
     std::vector<Instruction> insts(circuit.instructions().begin(),
                                    circuit.instructions().end());
 
@@ -82,7 +82,10 @@ QuantumCircuit RedundantGateElimination::run(const QuantumCircuit& circuit) cons
                 if (j >= 0 && !removed[j] && insts[j].qubits == cur.qubits) {
                     bool all_match = true;
                     for (qubit_t q : cur.qubits) {
-                        if (last[q] != j) { all_match = false; break; }
+                        if (last[q] != j) {
+                            all_match = false;
+                            break;
+                        }
                     }
                     if (all_match && is_inverse_pair(insts[j].gate, cur.gate)) {
                         removed[i] = removed[j] = true;
@@ -93,7 +96,8 @@ QuantumCircuit RedundantGateElimination::run(const QuantumCircuit& circuit) cons
                 }
             }
             if (!cancelled) {
-                for (qubit_t q : cur.qubits) last[q] = static_cast<std::ptrdiff_t>(i);
+                for (qubit_t q : cur.qubits)
+                    last[q] = static_cast<std::ptrdiff_t>(i);
             }
         }
 

@@ -28,7 +28,7 @@ struct KrausChannel {
 
 // 噪声模型（M6 范围）：每个门作用后，对其触及的每个比特施加同一通道
 class NoiseModel {
-public:
+   public:
     NoiseModel() = default;
 
     NoiseModel& add_all_qubit_channel(KrausChannel channel) {
@@ -39,7 +39,7 @@ public:
     const std::vector<KrausChannel>& channels() const { return channels_; }
     bool empty() const { return channels_.empty(); }
 
-private:
+   private:
     std::vector<KrausChannel> channels_;
 };
 

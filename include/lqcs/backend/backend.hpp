@@ -9,10 +9,11 @@
 namespace lqcs {
 
 class Backend {
-public:
+   public:
     virtual ~Backend() = default;
 
-    virtual Result run(const QuantumCircuit& circuit, std::size_t shots = 1024) = 0;
+    virtual Result run(const QuantumCircuit& circuit,
+                       std::size_t shots = 1024) = 0;
     virtual std::string name() const = 0;
 };
 

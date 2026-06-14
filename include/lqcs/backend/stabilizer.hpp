@@ -18,7 +18,7 @@ namespace lqcs {
 // 第 2n 行为 scratch。每行 (x_0..x_{n-1}, z_0..z_{n-1}, r) 表示一个
 // Pauli 算符及其符号。
 class StabilizerTableau {
-public:
+   public:
     explicit StabilizerTableau(std::size_t num_qubits);  // 初始 |0...0>
 
     std::size_t num_qubits() const { return n_; }
@@ -48,13 +48,13 @@ public:
     // n 个 stabilizer 生成元的 Pauli 串（带符号，如 "+XX"），用于检验
     std::vector<std::string> stabilizers() const;
 
-private:
+   private:
     std::uint8_t& xat(std::size_t i, std::size_t j) { return xs_[i * n_ + j]; }
     std::uint8_t& zat(std::size_t i, std::size_t j) { return zs_[i * n_ + j]; }
     // row h ← row i · row h（Pauli 乘积，含符号）
     void rowsum(std::size_t h, std::size_t i);
 
-    std::size_t               n_;
+    std::size_t n_;
     std::vector<std::uint8_t> xs_;  // (2n+1) × n
     std::vector<std::uint8_t> zs_;  // (2n+1) × n
     std::vector<std::uint8_t> rs_;  // (2n+1) 相位位

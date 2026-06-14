@@ -39,7 +39,9 @@ QuantumCircuit SingleQubitGateFusion::run(const QuantumCircuit& circuit) const {
     auto flush = [&](qubit_t q) {
         if (!pending[q]) return;
         if (!is_identity2(*pending[q])) {
-            out.append({Gate{GateType::Unitary, {}, 0,
+            out.append({Gate{GateType::Unitary,
+                             {},
+                             0,
                              {pending[q]->begin(), pending[q]->end()}},
                         {q},
                         {}});
@@ -74,13 +76,15 @@ namespace {
 
 // C = A · B（dim×dim 行主序）
 std::vector<complex_t> matmul(const std::vector<complex_t>& a,
-                              const std::vector<complex_t>& b, std::size_t dim) {
+                              const std::vector<complex_t>& b,
+                              std::size_t dim) {
     std::vector<complex_t> c(dim * dim, complex_t{0, 0});
     for (std::size_t i = 0; i < dim; ++i)
         for (std::size_t l = 0; l < dim; ++l) {
             const complex_t ail = a[i * dim + l];
             if (ail == complex_t{0, 0}) continue;
-            for (std::size_t j = 0; j < dim; ++j) c[i * dim + j] += ail * b[l * dim + j];
+            for (std::size_t j = 0; j < dim; ++j)
+                c[i * dim + j] += ail * b[l * dim + j];
         }
     return c;
 }
@@ -96,7 +100,10 @@ std::vector<complex_t> expand(const std::vector<complex_t>& m,
     std::vector<int> dst_to_src(D, -1);
     for (std::size_t a = 0; a < S; ++a) {
         for (std::size_t p = 0; p < D; ++p) {
-            if (dst[p] == src[a]) { dst_to_src[p] = static_cast<int>(a); break; }
+            if (dst[p] == src[a]) {
+                dst_to_src[p] = static_cast<int>(a);
+                break;
+            }
         }
     }
     std::vector<complex_t> out(dim_d * dim_d, complex_t{0, 0});
@@ -107,7 +114,10 @@ std::vector<complex_t> expand(const std::vector<complex_t>& m,
             for (std::size_t p = 0; p < D; ++p) {
                 const std::size_t br = (row >> p) & 1, bc = (col >> p) & 1;
                 if (dst_to_src[p] < 0) {
-                    if (br != bc) { match = false; break; }
+                    if (br != bc) {
+                        match = false;
+                        break;
+                    }
                 } else {
                     const auto a = static_cast<std::size_t>(dst_to_src[p]);
                     r_s |= br << a;
@@ -121,9 +131,9 @@ std::vector<complex_t> expand(const std::vector<complex_t>& m,
 }
 
 struct Block {
-    std::vector<qubit_t>     qubits;  // 升序
-    std::vector<complex_t>   mat;     // 2^k × 2^k
-    std::vector<Instruction> gates;   // 原始门（flush 决策与单门还原用）
+    std::vector<qubit_t> qubits;  // 升序
+    std::vector<complex_t> mat;   // 2^k × 2^k
+    std::vector<Instruction> gates;  // 原始门（flush 决策与单门还原用）
 };
 
 // 一个幺正门是否可参与融合
@@ -151,7 +161,7 @@ QuantumCircuit GateFusion::run(const QuantumCircuit& circuit) const {
     }
 
     QuantumCircuit out(circuit.num_qubits(), circuit.num_clbits());
-    std::vector<Block> blocks;                     // 开放块
+    std::vector<Block> blocks;                         // 开放块
     std::vector<int> owner(circuit.num_qubits(), -1);  // qubit → 块索引
 
     auto flush_block = [&](int bi) {
@@ -203,15 +213,15 @@ QuantumCircuit GateFusion::run(const QuantumCircuit& circuit) const {
         // 收集与新门重叠的开放块
         std::vector<int> involved;
         for (qubit_t q : inst.qubits) {
-            if (owner[q] >= 0 &&
-                std::find(involved.begin(), involved.end(), owner[q]) ==
-                    involved.end()) {
+            if (owner[q] >= 0 && std::find(involved.begin(), involved.end(),
+                                           owner[q]) == involved.end()) {
                 involved.push_back(owner[q]);
             }
         }
         std::vector<qubit_t> new_qubits = inst.qubits;
         std::sort(new_qubits.begin(), new_qubits.end());
-        for (int bi : involved) new_qubits = sorted_union(new_qubits, blocks[bi].qubits);
+        for (int bi : involved)
+            new_qubits = sorted_union(new_qubits, blocks[bi].qubits);
 
         if (new_qubits.size() > max_block_size_) {
             // 超出块上限：先 flush 重叠块，新门自成一块
@@ -230,7 +240,8 @@ QuantumCircuit GateFusion::run(const QuantumCircuit& circuit) const {
         for (int bi : involved) {
             acc = matmul(expand(blocks[bi].mat, blocks[bi].qubits, new_qubits),
                          acc, dim);
-            for (auto& gate : blocks[bi].gates) merged.gates.push_back(std::move(gate));
+            for (auto& gate : blocks[bi].gates)
+                merged.gates.push_back(std::move(gate));
             blocks[bi].gates.clear();
             for (qubit_t q : blocks[bi].qubits) owner[q] = -1;
         }
@@ -241,7 +252,10 @@ QuantumCircuit GateFusion::run(const QuantumCircuit& circuit) const {
         // 放入一个空槽或追加，并更新 owner
         int slot = -1;
         for (std::size_t bi = 0; bi < blocks.size(); ++bi) {
-            if (blocks[bi].gates.empty()) { slot = static_cast<int>(bi); break; }
+            if (blocks[bi].gates.empty()) {
+                slot = static_cast<int>(bi);
+                break;
+            }
         }
         if (slot < 0) {
             slot = static_cast<int>(blocks.size());

@@ -11,7 +11,7 @@ namespace lqcs {
 // 一次全状态向量扫描。乘积为恒等时直接消去（HH、XX 等顺带优化）。
 // 不跨越 Measure/Reset/Barrier 及任何触及该比特的多比特门。
 class SingleQubitGateFusion final : public Pass {
-public:
+   public:
     QuantumCircuit run(const QuantumCircuit& circuit) const override;
     std::string name() const override { return "single_qubit_gate_fusion"; }
 };
@@ -21,13 +21,13 @@ public:
 // 向量扫描合并为一次。块内门数 ≥ 2 才融合（单门保留以走快速内核）。
 // 不跨越 Measure/Reset/Barrier；过大的门（如模幂置换门）原样保留。
 class GateFusion final : public Pass {
-public:
+   public:
     explicit GateFusion(std::size_t max_block_size = 4)
         : max_block_size_(max_block_size) {}
     QuantumCircuit run(const QuantumCircuit& circuit) const override;
     std::string name() const override { return "gate_fusion"; }
 
-private:
+   private:
     std::size_t max_block_size_;
 };
 

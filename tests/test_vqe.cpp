@@ -10,10 +10,8 @@ using namespace lqcs::algorithms;
 namespace {
 
 const Hamiltonian kH2 = {
-    {-1.052373245772859, "II"},
-    {+0.39793742484318045, "IZ"},
-    {-0.39793742484318045, "ZI"},
-    {-0.01128010425623538, "ZZ"},
+    {-1.052373245772859, "II"},   {+0.39793742484318045, "IZ"},
+    {-0.39793742484318045, "ZI"}, {-0.01128010425623538, "ZZ"},
     {+0.18093119978423156, "XX"},
 };
 constexpr double kH2Exact = -1.8572750302023824;
@@ -49,14 +47,13 @@ TEST(VQE, HistoryIsMonotonicallyDecreasing) {
 TEST(VQE, SingleQubitAnalyticCase) {
     // H = Z：基态 |1>，能量 -1；ansatz RY(θ)|0> 在 θ=π 处达到
     const Hamiltonian h = {{1.0, "Z"}};
-    const auto res = vqe(
-        h,
-        [](std::span<const double> t) {
-            QuantumCircuit qc(1);
-            qc.ry(t[0], 0);
-            return qc;
-        },
-        1, {.max_iterations = 5});
+    const auto res = vqe(h,
+                         [](std::span<const double> t) {
+                             QuantumCircuit qc(1);
+                             qc.ry(t[0], 0);
+                             return qc;
+                         },
+                         1, {.max_iterations = 5});
     EXPECT_NEAR(res.energy, -1.0, 1e-10);
 }
 
@@ -64,7 +61,6 @@ TEST(VQE, RespectsInitialParameters) {
     const auto res = vqe(kH2, h2_ansatz, 1,
                          {.max_iterations = 50, .initial_parameters = {0.5}});
     EXPECT_NEAR(res.energy, kH2Exact, 1e-9);
-    EXPECT_THROW(
-        vqe(kH2, h2_ansatz, 1, {.initial_parameters = {1.0, 2.0}}),
-        std::invalid_argument);
+    EXPECT_THROW(vqe(kH2, h2_ansatz, 1, {.initial_parameters = {1.0, 2.0}}),
+                 std::invalid_argument);
 }

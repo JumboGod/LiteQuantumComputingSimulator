@@ -18,8 +18,9 @@ namespace lqcs {
 // 参数化门限定为生成元本征值 ±1 的旋转（RX/RY/RZ/PauliRotation），
 // 因此 parameter-shift 梯度精确成立。
 class ParametricCircuit {
-public:
-    explicit ParametricCircuit(std::size_t num_qubits, std::size_t num_clbits = 0);
+   public:
+    explicit ParametricCircuit(std::size_t num_qubits,
+                               std::size_t num_clbits = 0);
 
     // —— 固定（非参数）门 ——
     ParametricCircuit& x(qubit_t q);
@@ -43,7 +44,8 @@ public:
     std::size_t rz(qubit_t q);
     // 多比特 Pauli 旋转 exp(-iθ/2·P)，pauli 最右字符对应 qubits[0]
     std::size_t rp(std::string_view pauli, std::span<const qubit_t> qubits);
-    std::size_t rp(std::string_view pauli, std::initializer_list<qubit_t> qubits);
+    std::size_t rp(std::string_view pauli,
+                   std::initializer_list<qubit_t> qubits);
 
     // 绑定参数 → 具体电路（结构不变，仅填入旋转角）
     QuantumCircuit bind(std::span<const double> values) const;
@@ -55,11 +57,11 @@ public:
     std::size_t num_qubits() const { return template_.num_qubits(); }
     std::size_t num_clbits() const { return template_.num_clbits(); }
 
-private:
+   private:
     std::size_t add_param_gate(Gate gate, std::vector<qubit_t> qubits);
 
-    QuantumCircuit           template_;     // 含占位角（0）的指令模板
-    std::vector<std::size_t> param_inst_;   // 参数 id → 模板指令下标
+    QuantumCircuit template_;              // 含占位角（0）的指令模板
+    std::vector<std::size_t> param_inst_;  // 参数 id → 模板指令下标
 };
 
 }  // namespace lqcs

@@ -28,10 +28,13 @@ QuantumCircuit random_clifford(std::size_t n, std::size_t n_gates,
             case 4: qc.z(q); break;
             case 5: qc.sx(q); break;
             default: {
-                const auto b = static_cast<qubit_t>((q + 1 + rng() % (n - 1)) % n);
+                const auto b =
+                    static_cast<qubit_t>((q + 1 + rng() % (n - 1)) % n);
                 if (b != q) {
-                    if (rng() & 1) qc.cx(q, b);
-                    else qc.cz(q, b);
+                    if (rng() & 1)
+                        qc.cx(q, b);
+                    else
+                        qc.cz(q, b);
                 }
                 break;
             }
@@ -156,14 +159,17 @@ TEST(Stabilizer, ReproducibleWithSeed) {
     QuantumCircuit m(6, 6);
     m.compose(qc);
     m.measure_all();
-    EXPECT_EQ(seeded(123).run(m, 500).counts(), seeded(123).run(m, 500).counts());
+    EXPECT_EQ(seeded(123).run(m, 500).counts(),
+              seeded(123).run(m, 500).counts());
 }
 
 TEST(Stabilizer, GateSetMatchesStatevector) {
     // 每种 Clifford 门逐一与状态向量末态分布对比
     QuantumCircuit qc(3);
-    qc.h(0).s(1).sdg(2).sx(0).x(1).y(2).z(0).cx(0, 1).cy(1, 2).cz(0, 2).swap(0, 2);
-    const auto probs = StatevectorSimulator().run_statevector(qc).probabilities();
+    qc.h(0).s(1).sdg(2).sx(0).x(1).y(2).z(0).cx(0, 1).cy(1, 2).cz(0, 2).swap(0,
+                                                                             2);
+    const auto probs =
+        StatevectorSimulator().run_statevector(qc).probabilities();
 
     QuantumCircuit m(3, 3);
     m.compose(qc);

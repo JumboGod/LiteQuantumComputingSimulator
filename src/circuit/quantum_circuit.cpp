@@ -19,7 +19,8 @@ void validate_unitary(std::span<const complex_t> m, std::size_t dim) {
             for (std::size_t l = 0; l < dim; ++l) {
                 sum += m[i * dim + l] * std::conj(m[j * dim + l]);
             }
-            const complex_t expected = (i == j) ? complex_t{1, 0} : complex_t{0, 0};
+            const complex_t expected =
+                (i == j) ? complex_t{1, 0} : complex_t{0, 0};
             if (std::abs(sum - expected) > kTol) {
                 throw std::invalid_argument(
                     "unitary: matrix is not unitary (U*Udag != I)");
@@ -41,25 +42,26 @@ QuantumCircuit::QuantumCircuit(std::size_t num_qubits, std::size_t num_clbits)
 
 void QuantumCircuit::check_qubit(qubit_t q) const {
     if (q >= num_qubits_) {
-        throw std::out_of_range("qubit index " + std::to_string(q) +
-                                " out of range (num_qubits = " +
-                                std::to_string(num_qubits_) + ")");
+        throw std::out_of_range(
+            "qubit index " + std::to_string(q) +
+            " out of range (num_qubits = " + std::to_string(num_qubits_) + ")");
     }
 }
 
 void QuantumCircuit::check_clbit(clbit_t c) const {
     if (c >= num_clbits_) {
-        throw std::out_of_range("clbit index " + std::to_string(c) +
-                                " out of range (num_clbits = " +
-                                std::to_string(num_clbits_) + ")");
+        throw std::out_of_range(
+            "clbit index " + std::to_string(c) +
+            " out of range (num_clbits = " + std::to_string(num_clbits_) + ")");
     }
 }
 
-QuantumCircuit& QuantumCircuit::add_gate(Gate gate, std::vector<qubit_t> qubits) {
+QuantumCircuit& QuantumCircuit::add_gate(Gate gate,
+                                         std::vector<qubit_t> qubits) {
     if (qubits.size() != gate.num_qubits()) {
-        throw std::invalid_argument(gate.name() + ": expects " +
-                                    std::to_string(gate.num_qubits()) +
-                                    " qubits, got " + std::to_string(qubits.size()));
+        throw std::invalid_argument(
+            gate.name() + ": expects " + std::to_string(gate.num_qubits()) +
+            " qubits, got " + std::to_string(qubits.size()));
     }
     std::unordered_set<qubit_t> seen;
     for (qubit_t q : qubits) {
@@ -76,7 +78,8 @@ QuantumCircuit& QuantumCircuit::add_gate(Gate gate, std::vector<qubit_t> qubits)
 QuantumCircuit& QuantumCircuit::append(Instruction inst) {
     if (inst.gate.type == GateType::Measure) {
         if (inst.qubits.size() != 1 || inst.clbits.size() != 1) {
-            throw std::invalid_argument("append: malformed measure instruction");
+            throw std::invalid_argument(
+                "append: malformed measure instruction");
         }
         check_clbit(inst.clbits[0]);
         check_qubit(inst.qubits[0]);
@@ -86,16 +89,36 @@ QuantumCircuit& QuantumCircuit::append(Instruction inst) {
     return add_gate(std::move(inst.gate), std::move(inst.qubits));
 }
 
-QuantumCircuit& QuantumCircuit::i(qubit_t q)   { return add_gate({GateType::I, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::x(qubit_t q)   { return add_gate({GateType::X, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::y(qubit_t q)   { return add_gate({GateType::Y, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::z(qubit_t q)   { return add_gate({GateType::Z, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::h(qubit_t q)   { return add_gate({GateType::H, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::s(qubit_t q)   { return add_gate({GateType::S, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::sdg(qubit_t q) { return add_gate({GateType::Sdg, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::t(qubit_t q)   { return add_gate({GateType::T, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::tdg(qubit_t q) { return add_gate({GateType::Tdg, {}}, {q}); }
-QuantumCircuit& QuantumCircuit::sx(qubit_t q)  { return add_gate({GateType::SX, {}}, {q}); }
+QuantumCircuit& QuantumCircuit::i(qubit_t q) {
+    return add_gate({GateType::I, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::x(qubit_t q) {
+    return add_gate({GateType::X, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::y(qubit_t q) {
+    return add_gate({GateType::Y, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::z(qubit_t q) {
+    return add_gate({GateType::Z, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::h(qubit_t q) {
+    return add_gate({GateType::H, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::s(qubit_t q) {
+    return add_gate({GateType::S, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::sdg(qubit_t q) {
+    return add_gate({GateType::Sdg, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::t(qubit_t q) {
+    return add_gate({GateType::T, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::tdg(qubit_t q) {
+    return add_gate({GateType::Tdg, {}}, {q});
+}
+QuantumCircuit& QuantumCircuit::sx(qubit_t q) {
+    return add_gate({GateType::SX, {}}, {q});
+}
 
 QuantumCircuit& QuantumCircuit::rx(double theta, qubit_t q) {
     return add_gate({GateType::RX, {theta}}, {q});
@@ -109,7 +132,8 @@ QuantumCircuit& QuantumCircuit::rz(double theta, qubit_t q) {
 QuantumCircuit& QuantumCircuit::p(double lambda, qubit_t q) {
     return add_gate({GateType::P, {lambda}}, {q});
 }
-QuantumCircuit& QuantumCircuit::u(double theta, double phi, double lambda, qubit_t q) {
+QuantumCircuit& QuantumCircuit::u(double theta, double phi, double lambda,
+                                  qubit_t q) {
     return add_gate({GateType::U, {theta, phi, lambda}}, {q});
 }
 
@@ -144,7 +168,8 @@ QuantumCircuit& QuantumCircuit::cswap(qubit_t c, qubit_t a, qubit_t b) {
     return add_gate({GateType::SWAP, {}, 1}, {c, a, b});
 }
 
-QuantumCircuit& QuantumCircuit::mcx(std::span<const qubit_t> controls, qubit_t t) {
+QuantumCircuit& QuantumCircuit::mcx(std::span<const qubit_t> controls,
+                                    qubit_t t) {
     if (controls.empty()) {
         throw std::invalid_argument("mcx: needs at least one control qubit");
     }
@@ -157,7 +182,8 @@ QuantumCircuit& QuantumCircuit::mcx(std::initializer_list<qubit_t> controls,
     return mcx(std::span<const qubit_t>(controls.begin(), controls.size()), t);
 }
 QuantumCircuit& QuantumCircuit::mcp(double lambda,
-                                    std::span<const qubit_t> controls, qubit_t t) {
+                                    std::span<const qubit_t> controls,
+                                    qubit_t t) {
     if (controls.empty()) {
         throw std::invalid_argument("mcp: needs at least one control qubit");
     }
@@ -168,7 +194,8 @@ QuantumCircuit& QuantumCircuit::mcp(double lambda,
 QuantumCircuit& QuantumCircuit::mcp(double lambda,
                                     std::initializer_list<qubit_t> controls,
                                     qubit_t t) {
-    return mcp(lambda, std::span<const qubit_t>(controls.begin(), controls.size()), t);
+    return mcp(lambda,
+               std::span<const qubit_t>(controls.begin(), controls.size()), t);
 }
 
 QuantumCircuit& QuantumCircuit::swap(qubit_t a, qubit_t b) {
@@ -199,11 +226,13 @@ QuantumCircuit& QuantumCircuit::rp(double theta, std::string_view pauli,
         }
     }
     Gate g{GateType::PauliRotation, {theta}, 0, {}, {}, std::string(pauli)};
-    return add_gate(std::move(g), std::vector<qubit_t>(qubits.begin(), qubits.end()));
+    return add_gate(std::move(g),
+                    std::vector<qubit_t>(qubits.begin(), qubits.end()));
 }
 QuantumCircuit& QuantumCircuit::rp(double theta, std::string_view pauli,
                                    std::initializer_list<qubit_t> qubits) {
-    return rp(theta, pauli, std::span<const qubit_t>(qubits.begin(), qubits.size()));
+    return rp(theta, pauli,
+              std::span<const qubit_t>(qubits.begin(), qubits.size()));
 }
 
 QuantumCircuit& QuantumCircuit::unitary(std::span<const complex_t> matrix,
@@ -214,35 +243,47 @@ QuantumCircuit& QuantumCircuit::unitary(std::span<const complex_t> matrix,
             "unitary: matrix size must be 2^k x 2^k for k qubits");
     }
     validate_unitary(matrix, dim);
-    Gate g{GateType::Unitary, {}, 0,
-           std::vector<complex_t>(matrix.begin(), matrix.end()), {}};
-    return add_gate(std::move(g), std::vector<qubit_t>(qubits.begin(), qubits.end()));
+    Gate g{GateType::Unitary,
+           {},
+           0,
+           std::vector<complex_t>(matrix.begin(), matrix.end()),
+           {}};
+    return add_gate(std::move(g),
+                    std::vector<qubit_t>(qubits.begin(), qubits.end()));
 }
 QuantumCircuit& QuantumCircuit::unitary(std::span<const complex_t> matrix,
                                         std::initializer_list<qubit_t> qubits) {
-    return unitary(matrix, std::span<const qubit_t>(qubits.begin(), qubits.size()));
+    return unitary(matrix,
+                   std::span<const qubit_t>(qubits.begin(), qubits.size()));
 }
 
 QuantumCircuit& QuantumCircuit::permutation(std::span<const std::size_t> table,
                                             std::span<const qubit_t> qubits) {
     const std::size_t dim = std::size_t{1} << qubits.size();
     if (table.size() != dim || !is_power_of_two(table.size())) {
-        throw std::invalid_argument("permutation: table size must be 2^k for k qubits");
+        throw std::invalid_argument(
+            "permutation: table size must be 2^k for k qubits");
     }
     std::vector<bool> hit(dim, false);
     for (std::size_t v : table) {
         if (v >= dim || hit[v]) {
-            throw std::invalid_argument("permutation: table is not a bijection");
+            throw std::invalid_argument(
+                "permutation: table is not a bijection");
         }
         hit[v] = true;
     }
-    Gate g{GateType::Permutation, {}, 0, {},
+    Gate g{GateType::Permutation,
+           {},
+           0,
+           {},
            std::vector<std::size_t>(table.begin(), table.end())};
-    return add_gate(std::move(g), std::vector<qubit_t>(qubits.begin(), qubits.end()));
+    return add_gate(std::move(g),
+                    std::vector<qubit_t>(qubits.begin(), qubits.end()));
 }
-QuantumCircuit& QuantumCircuit::permutation(std::span<const std::size_t> table,
-                                            std::initializer_list<qubit_t> qubits) {
-    return permutation(table, std::span<const qubit_t>(qubits.begin(), qubits.size()));
+QuantumCircuit& QuantumCircuit::permutation(
+    std::span<const std::size_t> table, std::initializer_list<qubit_t> qubits) {
+    return permutation(table,
+                       std::span<const qubit_t>(qubits.begin(), qubits.size()));
 }
 
 QuantumCircuit& QuantumCircuit::measure(qubit_t q, clbit_t c) {
@@ -279,7 +320,8 @@ QuantumCircuit& QuantumCircuit::compose(const QuantumCircuit& other,
             throw std::invalid_argument("compose: sub-circuit has more qubits");
         }
         map.resize(other.num_qubits());
-        for (std::size_t q = 0; q < map.size(); ++q) map[q] = static_cast<qubit_t>(q);
+        for (std::size_t q = 0; q < map.size(); ++q)
+            map[q] = static_cast<qubit_t>(q);
     }
     if (map.size() != other.num_qubits()) {
         throw std::invalid_argument(

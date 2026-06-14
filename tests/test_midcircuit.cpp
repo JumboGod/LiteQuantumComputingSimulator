@@ -18,7 +18,8 @@ TEST(MidCircuit, MeasureCollapsesState) {
     qc.h(0).measure(0, 0).cx(0, 1).measure(1, 1);
     auto result = seeded(42).run(qc, 2048);
     for (const auto& [key, count] : result.counts()) {
-        EXPECT_TRUE(key == "00" || key == "11") << "unexpected outcome: " << key;
+        EXPECT_TRUE(key == "00" || key == "11")
+            << "unexpected outcome: " << key;
     }
 }
 
@@ -36,13 +37,13 @@ TEST(MidCircuit, RemeasureAfterHadamardIsUniform) {
 }
 
 TEST(MidCircuit, ResetForcesZero) {
-    {   // |1> 经 reset 后测得 0
+    {  // |1> 经 reset 后测得 0
         QuantumCircuit qc(1, 1);
         qc.x(0).reset(0).measure(0, 0);
         auto result = seeded(3).run(qc, 100);
         EXPECT_EQ(result.counts().at("0"), 100u);
     }
-    {   // 叠加态经 reset 后确定为 0，再做 X 确定为 1
+    {  // 叠加态经 reset 后确定为 0，再做 X 确定为 1
         QuantumCircuit qc(1, 1);
         qc.h(0).reset(0).x(0).measure(0, 0);
         auto result = seeded(4).run(qc, 100);
@@ -75,5 +76,6 @@ TEST(MidCircuit, SameSeedReproduces) {
 TEST(MidCircuit, RunStatevectorRejectsReset) {
     QuantumCircuit qc(1);
     qc.h(0).reset(0);
-    EXPECT_THROW(StatevectorSimulator().run_statevector(qc), std::invalid_argument);
+    EXPECT_THROW(StatevectorSimulator().run_statevector(qc),
+                 std::invalid_argument);
 }

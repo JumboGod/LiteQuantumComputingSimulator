@@ -25,9 +25,21 @@ void expect_same_state(const QuantumCircuit& a, const QuantumCircuit& b) {
 
 TEST(Qasm, RoundTripPreservesState) {
     QuantumCircuit qc(3, 3);
-    qc.h(0).x(1).sdg(2).rx(0.5, 0).u(0.3, 1.2, -0.7, 1).p(0.9, 2)
-      .cx(0, 1).cz(1, 2).cp(1.1, 0, 2).crz(-0.4, 2, 0).swap(0, 2)
-      .ccx(0, 1, 2).cswap(2, 0, 1).barrier().measure_all();
+    qc.h(0)
+        .x(1)
+        .sdg(2)
+        .rx(0.5, 0)
+        .u(0.3, 1.2, -0.7, 1)
+        .p(0.9, 2)
+        .cx(0, 1)
+        .cz(1, 2)
+        .cp(1.1, 0, 2)
+        .crz(-0.4, 2, 0)
+        .swap(0, 2)
+        .ccx(0, 1, 2)
+        .cswap(2, 0, 1)
+        .barrier()
+        .measure_all();
 
     const std::string qasm = io::to_qasm(qc);
     const QuantumCircuit parsed = io::from_qasm(qasm);
@@ -69,7 +81,11 @@ measure q -> c;
     EXPECT_EQ(parsed.num_qubits(), 2u);
 
     QuantumCircuit expected(2, 2);
-    expected.h(0).cx(0, 1).t(1).rz(3 * std::numbers::pi / 2, 0).barrier()
+    expected.h(0)
+        .cx(0, 1)
+        .t(1)
+        .rz(3 * std::numbers::pi / 2, 0)
+        .barrier()
         .measure_all();
     expect_same_state(parsed, expected);
 }

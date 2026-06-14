@@ -13,7 +13,8 @@ int main() {
         qc.h(0).cx(0, 1);
         auto tab = StabilizerSimulator().run_tableau(qc);
         std::printf("Bell state stabilizers:\n");
-        for (const auto& g : tab.stabilizers()) std::printf("  %s\n", g.c_str());
+        for (const auto& g : tab.stabilizers())
+            std::printf("  %s\n", g.c_str());
     }
 
     // 2) 大规模 GHZ：状态向量法不可能，stabilizer 法 O(n²) 完成
@@ -28,7 +29,8 @@ int main() {
         auto counts = StabilizerSimulator({.seed = 42}).run(qc, 8);
         std::printf("  n=%4zu: outcomes(q0,q_last) = ", n);
         for (const auto& [key, c] : counts.counts()) {
-            std::printf("%s x%zu  ", key.c_str(), c);  // 应只有 00/11（完全关联）
+            std::printf("%s x%zu  ", key.c_str(),
+                        c);  // 应只有 00/11（完全关联）
         }
         std::printf("(state vector would need 2^%zu amplitudes)\n", n);
     }
