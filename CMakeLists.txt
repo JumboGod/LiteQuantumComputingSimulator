@@ -15,6 +15,12 @@ option(LQCS_BUILD_PYTHON "Build Python bindings (pylqcs)" OFF)
 option(LQCS_BUILD_BENCHMARKS "Build benchmarks" ON)
 option(LQCS_ENABLE_OPENMP "Enable OpenMP parallel kernels" ON)
 option(LQCS_ENABLE_AVX2 "Enable AVX2+FMA SIMD kernels (x86-64)" ON)
+option(LQCS_ENABLE_SANITIZERS "Build with AddressSanitizer + UBSan (CI/debug)" OFF)
+
+if(LQCS_ENABLE_SANITIZERS)
+    add_compile_options(-fsanitize=address,undefined -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address,undefined)
+endif()
 
 add_library(lqcs STATIC
     src/algorithms/arithmetic.cpp

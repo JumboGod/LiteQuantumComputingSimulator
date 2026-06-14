@@ -1,8 +1,12 @@
 # LiteQuantumComputingSimulator
 
+[![CI](https://github.com/JumboGod/LiteQuantumComputingSimulator/actions/workflows/ci.yml/badge.svg)](https://github.com/JumboGod/LiteQuantumComputingSimulator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+
 轻量级、高性能的量子计算模拟器，使用现代 C++（C++20）编写，API 设计参考 Qiskit。
 
-详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，贡献指南见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 当前进度
 
@@ -104,6 +108,21 @@ ctest --test-dir build --output-on-failure
 ./build/examples/bell_state
 ./build/examples/ghz_state
 ```
+
+### CMake 选项
+
+| 选项 | 默认 | 说明 |
+|------|:----:|------|
+| `LQCS_BUILD_TESTS` | ON | 构建 GoogleTest 单元测试 |
+| `LQCS_BUILD_EXAMPLES` | ON | 构建示例程序 |
+| `LQCS_BUILD_BENCHMARKS` | ON | 构建性能基准 |
+| `LQCS_BUILD_PYTHON` | OFF | 构建 pybind11 Python 绑定 |
+| `LQCS_ENABLE_OPENMP` | ON | OpenMP 并行内核 |
+| `LQCS_ENABLE_AVX2` | ON | AVX2+FMA SIMD 内核（x86-64；自动探测，不支持则跳过） |
+| `LQCS_ENABLE_SANITIZERS` | OFF | AddressSanitizer + UBSan（调试/CI） |
+
+持续集成（[CI](.github/workflows/ci.yml)）在 Linux/macOS/Windows × Debug/Release
+上构建并测试，另含 ASan+UBSan、无 AVX2 标量回退、Python 绑定与 clang-format 检查。
 
 ## Windows / Visual Studio 2022
 
