@@ -11,7 +11,8 @@ int main() {
     bell.h(0).cx(0, 1);
     const Statevector ideal = StatevectorSimulator().run_statevector(bell);
 
-    std::printf("Bell state under depolarizing noise (channel after each gate)\n");
+    std::printf(
+        "Bell state under depolarizing noise (channel after each gate)\n");
     std::printf("  p        fidelity   purity\n");
     for (const double p : {0.0, 0.01, 0.05, 0.1, 0.2}) {
         NoiseModel noise;
@@ -26,7 +27,8 @@ int main() {
     bell.measure_all();
     NoiseModel noise;
     noise.add_all_qubit_channel(KrausChannel::depolarizing(0.1));
-    Result r = DensityMatrixSimulator({.seed = 7, .noise = noise}).run(bell, 2048);
+    Result r =
+        DensityMatrixSimulator({.seed = 7, .noise = noise}).run(bell, 2048);
     std::printf("\ncounts at p = 0.1 (errors leak into 01/10):\n");
     r.print_counts();
     return 0;

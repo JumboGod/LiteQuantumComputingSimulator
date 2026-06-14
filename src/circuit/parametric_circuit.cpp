@@ -4,33 +4,66 @@
 
 namespace lqcs {
 
-ParametricCircuit::ParametricCircuit(std::size_t num_qubits, std::size_t num_clbits)
+ParametricCircuit::ParametricCircuit(std::size_t num_qubits,
+                                     std::size_t num_clbits)
     : template_(num_qubits, num_clbits) {}
 
-ParametricCircuit& ParametricCircuit::x(qubit_t q) { template_.x(q); return *this; }
-ParametricCircuit& ParametricCircuit::y(qubit_t q) { template_.y(q); return *this; }
-ParametricCircuit& ParametricCircuit::z(qubit_t q) { template_.z(q); return *this; }
-ParametricCircuit& ParametricCircuit::h(qubit_t q) { template_.h(q); return *this; }
-ParametricCircuit& ParametricCircuit::s(qubit_t q) { template_.s(q); return *this; }
-ParametricCircuit& ParametricCircuit::sdg(qubit_t q) { template_.sdg(q); return *this; }
-ParametricCircuit& ParametricCircuit::t(qubit_t q) { template_.t(q); return *this; }
-ParametricCircuit& ParametricCircuit::sx(qubit_t q) { template_.sx(q); return *this; }
+ParametricCircuit& ParametricCircuit::x(qubit_t q) {
+    template_.x(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::y(qubit_t q) {
+    template_.y(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::z(qubit_t q) {
+    template_.z(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::h(qubit_t q) {
+    template_.h(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::s(qubit_t q) {
+    template_.s(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::sdg(qubit_t q) {
+    template_.sdg(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::t(qubit_t q) {
+    template_.t(q);
+    return *this;
+}
+ParametricCircuit& ParametricCircuit::sx(qubit_t q) {
+    template_.sx(q);
+    return *this;
+}
 ParametricCircuit& ParametricCircuit::cx(qubit_t c, qubit_t t) {
-    template_.cx(c, t); return *this;
+    template_.cx(c, t);
+    return *this;
 }
 ParametricCircuit& ParametricCircuit::cy(qubit_t c, qubit_t t) {
-    template_.cy(c, t); return *this;
+    template_.cy(c, t);
+    return *this;
 }
 ParametricCircuit& ParametricCircuit::cz(qubit_t c, qubit_t t) {
-    template_.cz(c, t); return *this;
+    template_.cz(c, t);
+    return *this;
 }
 ParametricCircuit& ParametricCircuit::swap(qubit_t a, qubit_t b) {
-    template_.swap(a, b); return *this;
+    template_.swap(a, b);
+    return *this;
 }
 ParametricCircuit& ParametricCircuit::ccx(qubit_t c1, qubit_t c2, qubit_t t) {
-    template_.ccx(c1, c2, t); return *this;
+    template_.ccx(c1, c2, t);
+    return *this;
 }
-ParametricCircuit& ParametricCircuit::barrier() { template_.barrier(); return *this; }
+ParametricCircuit& ParametricCircuit::barrier() {
+    template_.barrier();
+    return *this;
+}
 
 std::size_t ParametricCircuit::add_param_gate(Gate gate,
                                               std::vector<qubit_t> qubits) {

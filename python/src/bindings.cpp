@@ -17,8 +17,8 @@ using namespace lqcs;
 
 namespace {
 
-using NpComplexArray =
-    py::array_t<std::complex<double>, py::array::c_style | py::array::forcecast>;
+using NpComplexArray = py::array_t<std::complex<double>,
+                                   py::array::c_style | py::array::forcecast>;
 
 std::vector<complex_t> to_matrix(const NpComplexArray& arr) {
     const auto buf = arr.request();
@@ -33,24 +33,35 @@ PYBIND11_MODULE(_pylqcs, m) {
 
     // —— GateType / Gate ——
     py::enum_<GateType>(m, "GateType")
-        .value("I", GateType::I).value("X", GateType::X)
-        .value("Y", GateType::Y).value("Z", GateType::Z)
-        .value("H", GateType::H).value("S", GateType::S)
-        .value("Sdg", GateType::Sdg).value("T", GateType::T)
-        .value("Tdg", GateType::Tdg).value("SX", GateType::SX)
-        .value("RX", GateType::RX).value("RY", GateType::RY)
-        .value("RZ", GateType::RZ).value("P", GateType::P)
-        .value("U", GateType::U).value("SWAP", GateType::SWAP)
-        .value("iSWAP", GateType::iSWAP).value("RXX", GateType::RXX)
-        .value("RYY", GateType::RYY).value("RZZ", GateType::RZZ)
+        .value("I", GateType::I)
+        .value("X", GateType::X)
+        .value("Y", GateType::Y)
+        .value("Z", GateType::Z)
+        .value("H", GateType::H)
+        .value("S", GateType::S)
+        .value("Sdg", GateType::Sdg)
+        .value("T", GateType::T)
+        .value("Tdg", GateType::Tdg)
+        .value("SX", GateType::SX)
+        .value("RX", GateType::RX)
+        .value("RY", GateType::RY)
+        .value("RZ", GateType::RZ)
+        .value("P", GateType::P)
+        .value("U", GateType::U)
+        .value("SWAP", GateType::SWAP)
+        .value("iSWAP", GateType::iSWAP)
+        .value("RXX", GateType::RXX)
+        .value("RYY", GateType::RYY)
+        .value("RZZ", GateType::RZZ)
         .value("Unitary", GateType::Unitary)
         .value("Permutation", GateType::Permutation)
-        .value("Measure", GateType::Measure).value("Reset", GateType::Reset)
+        .value("Measure", GateType::Measure)
+        .value("Reset", GateType::Reset)
         .value("Barrier", GateType::Barrier);
 
     py::class_<Gate>(m, "Gate")
-        .def(py::init<GateType, std::vector<double>, std::size_t>(),
-             "type"_a, "params"_a = std::vector<double>{}, "n_controls"_a = 0)
+        .def(py::init<GateType, std::vector<double>, std::size_t>(), "type"_a,
+             "params"_a = std::vector<double>{}, "n_controls"_a = 0)
         .def_readonly("type", &Gate::type)
         .def_readonly("params", &Gate::params)
         .def_readonly("n_controls", &Gate::n_controls)
@@ -62,76 +73,95 @@ PYBIND11_MODULE(_pylqcs, m) {
                  const auto v = g.matrix();
                  const py::ssize_t dim = py::ssize_t{1} << g.num_qubits();
                  py::array_t<std::complex<double>> arr({dim, dim});
-                 std::copy(v.begin(), v.end(),
-                           static_cast<std::complex<double>*>(arr.request().ptr));
+                 std::copy(
+                     v.begin(), v.end(),
+                     static_cast<std::complex<double>*>(arr.request().ptr));
                  return arr;
              })
-        .def("__repr__", [](const Gate& g) { return "<Gate " + g.name() + ">"; });
+        .def("__repr__",
+             [](const Gate& g) { return "<Gate " + g.name() + ">"; });
 
     // —— QuantumCircuit（流式 API：方法返回自身引用，支持链式调用）——
     auto rp = py::return_value_policy::reference_internal;
     py::class_<QuantumCircuit>(m, "QuantumCircuit")
         .def(py::init<std::size_t, std::size_t>(), "num_qubits"_a,
              "num_clbits"_a = 0)
-        .def("i", &QuantumCircuit::i, rp).def("x", &QuantumCircuit::x, rp)
-        .def("y", &QuantumCircuit::y, rp).def("z", &QuantumCircuit::z, rp)
-        .def("h", &QuantumCircuit::h, rp).def("s", &QuantumCircuit::s, rp)
-        .def("sdg", &QuantumCircuit::sdg, rp).def("t", &QuantumCircuit::t, rp)
-        .def("tdg", &QuantumCircuit::tdg, rp).def("sx", &QuantumCircuit::sx, rp)
-        .def("rx", &QuantumCircuit::rx, rp).def("ry", &QuantumCircuit::ry, rp)
-        .def("rz", &QuantumCircuit::rz, rp).def("p", &QuantumCircuit::p, rp)
+        .def("i", &QuantumCircuit::i, rp)
+        .def("x", &QuantumCircuit::x, rp)
+        .def("y", &QuantumCircuit::y, rp)
+        .def("z", &QuantumCircuit::z, rp)
+        .def("h", &QuantumCircuit::h, rp)
+        .def("s", &QuantumCircuit::s, rp)
+        .def("sdg", &QuantumCircuit::sdg, rp)
+        .def("t", &QuantumCircuit::t, rp)
+        .def("tdg", &QuantumCircuit::tdg, rp)
+        .def("sx", &QuantumCircuit::sx, rp)
+        .def("rx", &QuantumCircuit::rx, rp)
+        .def("ry", &QuantumCircuit::ry, rp)
+        .def("rz", &QuantumCircuit::rz, rp)
+        .def("p", &QuantumCircuit::p, rp)
         .def("u", &QuantumCircuit::u, rp)
-        .def("cx", &QuantumCircuit::cx, rp).def("cy", &QuantumCircuit::cy, rp)
-        .def("cz", &QuantumCircuit::cz, rp).def("ch", &QuantumCircuit::ch, rp)
-        .def("cp", &QuantumCircuit::cp, rp).def("crx", &QuantumCircuit::crx, rp)
-        .def("cry", &QuantumCircuit::cry, rp).def("crz", &QuantumCircuit::crz, rp)
+        .def("cx", &QuantumCircuit::cx, rp)
+        .def("cy", &QuantumCircuit::cy, rp)
+        .def("cz", &QuantumCircuit::cz, rp)
+        .def("ch", &QuantumCircuit::ch, rp)
+        .def("cp", &QuantumCircuit::cp, rp)
+        .def("crx", &QuantumCircuit::crx, rp)
+        .def("cry", &QuantumCircuit::cry, rp)
+        .def("crz", &QuantumCircuit::crz, rp)
         .def("ccx", &QuantumCircuit::ccx, rp)
         .def("cswap", &QuantumCircuit::cswap, rp)
-        .def("mcx",
-             [](QuantumCircuit& qc, std::vector<qubit_t> controls,
-                qubit_t target) -> QuantumCircuit& {
-                 return qc.mcx(controls, target);
-             },
-             rp, "controls"_a, "target"_a)
-        .def("mcp",
-             [](QuantumCircuit& qc, double lam, std::vector<qubit_t> controls,
-                qubit_t target) -> QuantumCircuit& {
-                 return qc.mcp(lam, controls, target);
-             },
-             rp, "lam"_a, "controls"_a, "target"_a)
+        .def(
+            "mcx",
+            [](QuantumCircuit& qc, std::vector<qubit_t> controls,
+               qubit_t target) -> QuantumCircuit& {
+                return qc.mcx(controls, target);
+            },
+            rp, "controls"_a, "target"_a)
+        .def(
+            "mcp",
+            [](QuantumCircuit& qc, double lam, std::vector<qubit_t> controls,
+               qubit_t target) -> QuantumCircuit& {
+                return qc.mcp(lam, controls, target);
+            },
+            rp, "lam"_a, "controls"_a, "target"_a)
         .def("swap", &QuantumCircuit::swap, rp)
         .def("iswap", &QuantumCircuit::iswap, rp)
         .def("rxx", &QuantumCircuit::rxx, rp)
         .def("ryy", &QuantumCircuit::ryy, rp)
         .def("rzz", &QuantumCircuit::rzz, rp)
-        .def("rp",
-             [](QuantumCircuit& qc, double theta, std::string_view pauli,
-                std::vector<qubit_t> qubits) -> QuantumCircuit& {
-                 return qc.rp(theta, pauli, qubits);
-             },
-             rp, "theta"_a, "pauli"_a, "qubits"_a)
-        .def("unitary",
-             [](QuantumCircuit& qc, const NpComplexArray& mat,
-                std::vector<qubit_t> qubits) -> QuantumCircuit& {
-                 return qc.unitary(to_matrix(mat), qubits);
-             },
-             rp, "matrix"_a, "qubits"_a)
-        .def("permutation",
-             [](QuantumCircuit& qc, std::vector<std::size_t> table,
-                std::vector<qubit_t> qubits) -> QuantumCircuit& {
-                 return qc.permutation(table, qubits);
-             },
-             rp, "table"_a, "qubits"_a)
+        .def(
+            "rp",
+            [](QuantumCircuit& qc, double theta, std::string_view pauli,
+               std::vector<qubit_t> qubits) -> QuantumCircuit& {
+                return qc.rp(theta, pauli, qubits);
+            },
+            rp, "theta"_a, "pauli"_a, "qubits"_a)
+        .def(
+            "unitary",
+            [](QuantumCircuit& qc, const NpComplexArray& mat,
+               std::vector<qubit_t> qubits) -> QuantumCircuit& {
+                return qc.unitary(to_matrix(mat), qubits);
+            },
+            rp, "matrix"_a, "qubits"_a)
+        .def(
+            "permutation",
+            [](QuantumCircuit& qc, std::vector<std::size_t> table,
+               std::vector<qubit_t> qubits) -> QuantumCircuit& {
+                return qc.permutation(table, qubits);
+            },
+            rp, "table"_a, "qubits"_a)
         .def("measure", &QuantumCircuit::measure, rp)
         .def("measure_all", &QuantumCircuit::measure_all, rp)
         .def("reset", &QuantumCircuit::reset, rp)
         .def("barrier", &QuantumCircuit::barrier, rp)
-        .def("compose",
-             [](QuantumCircuit& qc, const QuantumCircuit& other,
-                std::vector<qubit_t> qubit_map) -> QuantumCircuit& {
-                 return qc.compose(other, qubit_map);
-             },
-             rp, "other"_a, "qubit_map"_a = std::vector<qubit_t>{})
+        .def(
+            "compose",
+            [](QuantumCircuit& qc, const QuantumCircuit& other,
+               std::vector<qubit_t> qubit_map) -> QuantumCircuit& {
+                return qc.compose(other, qubit_map);
+            },
+            rp, "other"_a, "qubit_map"_a = std::vector<qubit_t>{})
         .def("inverse", &QuantumCircuit::inverse)
         .def("power", &QuantumCircuit::power)
         .def("num_qubits", &QuantumCircuit::num_qubits)
@@ -143,7 +173,8 @@ PYBIND11_MODULE(_pylqcs, m) {
         .def("__repr__", [](const QuantumCircuit& qc) {
             return "<QuantumCircuit qubits=" + std::to_string(qc.num_qubits()) +
                    " clbits=" + std::to_string(qc.num_clbits()) +
-                   " instructions=" + std::to_string(qc.num_instructions()) + ">";
+                   " instructions=" + std::to_string(qc.num_instructions()) +
+                   ">";
         });
 
     // —— Statevector ——
@@ -209,11 +240,18 @@ PYBIND11_MODULE(_pylqcs, m) {
     // —— StatevectorSimulator ——
     py::class_<StatevectorSimulator>(m, "StatevectorSimulator")
         .def(py::init([](std::optional<std::uint64_t> seed, bool fuse_gates,
-                         int num_threads, NoiseModel noise) {
-                 return StatevectorSimulator(
-                     {seed, fuse_gates, num_threads, std::move(noise)});
+                         std::size_t fusion_max_qubits, int num_threads,
+                         NoiseModel noise) {
+                 StatevectorSimulator::Options opt;
+                 opt.seed = seed;
+                 opt.fuse_gates = fuse_gates;
+                 opt.fusion_max_qubits = fusion_max_qubits;
+                 opt.num_threads = num_threads;
+                 opt.noise = std::move(noise);
+                 return StatevectorSimulator(std::move(opt));
              }),
-             "seed"_a = py::none(), "fuse_gates"_a = true, "num_threads"_a = 0,
+             "seed"_a = py::none(), "fuse_gates"_a = true,
+             "fusion_max_qubits"_a = 4, "num_threads"_a = 0,
              "noise"_a = NoiseModel{})
         .def("run", &StatevectorSimulator::run, "circuit"_a, "shots"_a = 1024,
              py::call_guard<py::gil_scoped_release>())
@@ -228,11 +266,12 @@ PYBIND11_MODULE(_pylqcs, m) {
     alg.def("qft", &qft, "n"_a, "do_swaps"_a = true);
     alg.def("qft_inverse", &qft_inverse, "n"_a, "do_swaps"_a = true);
     alg.def("xor_oracle", &xor_oracle, "n_in"_a, "n_out"_a, "f"_a);
-    alg.def("phase_oracle",
-            [](std::size_t n, std::vector<std::uint64_t> marked) {
-                return phase_oracle(n, marked);
-            },
-            "n"_a, "marked"_a);
+    alg.def(
+        "phase_oracle",
+        [](std::size_t n, std::vector<std::uint64_t> marked) {
+            return phase_oracle(n, marked);
+        },
+        "n"_a, "marked"_a);
     alg.def("modular_exponentiation", &modular_exponentiation, "a"_a, "N"_a,
             "n_counting"_a, "n_work"_a);
 
@@ -266,12 +305,13 @@ PYBIND11_MODULE(_pylqcs, m) {
         .def_readonly("success_probability", &GroverResult::success_probability)
         .def_readonly("iterations", &GroverResult::iterations)
         .def_readonly("circuit", &GroverResult::circuit);
-    alg.def("grover",
-            [](std::size_t n, std::vector<std::uint64_t> marked,
-               std::optional<std::size_t> iterations) {
-                return grover(n, marked, iterations);
-            },
-            "n"_a, "marked"_a, "iterations"_a = py::none());
+    alg.def(
+        "grover",
+        [](std::size_t n, std::vector<std::uint64_t> marked,
+           std::optional<std::size_t> iterations) {
+            return grover(n, marked, iterations);
+        },
+        "n"_a, "marked"_a, "iterations"_a = py::none());
 
     py::class_<ShorResult>(alg, "ShorResult")
         .def_readonly("success", &ShorResult::success)
@@ -288,8 +328,8 @@ PYBIND11_MODULE(_pylqcs, m) {
                 return "<ShorResult N=" + std::to_string(r.N) + " failed>";
             }
             return "<ShorResult " + std::to_string(r.N) + " = " +
-                   std::to_string(r.factor1) + " x " + std::to_string(r.factor2) +
-                   " (a=" + std::to_string(r.a) +
+                   std::to_string(r.factor1) + " x " +
+                   std::to_string(r.factor2) + " (a=" + std::to_string(r.a) +
                    ", r=" + std::to_string(r.period) + ")>";
         });
     alg.def(
@@ -324,17 +364,17 @@ PYBIND11_MODULE(_pylqcs, m) {
         .def("rx", &ParametricCircuit::rx, "qubit"_a)
         .def("ry", &ParametricCircuit::ry, "qubit"_a)
         .def("rz", &ParametricCircuit::rz, "qubit"_a)
-        .def("rp",
-             [](ParametricCircuit& pc, std::string_view pauli,
-                std::vector<qubit_t> qubits) {
-                 return pc.rp(pauli, qubits);
-             },
-             "pauli"_a, "qubits"_a)
-        .def("bind",
-             [](const ParametricCircuit& pc, std::vector<double> values) {
-                 return pc.bind(values);
-             },
-             "values"_a)
+        .def(
+            "rp",
+            [](ParametricCircuit& pc, std::string_view pauli,
+               std::vector<qubit_t> qubits) { return pc.rp(pauli, qubits); },
+            "pauli"_a, "qubits"_a)
+        .def(
+            "bind",
+            [](const ParametricCircuit& pc, std::vector<double> values) {
+                return pc.bind(values);
+            },
+            "values"_a)
         .def("num_parameters", &ParametricCircuit::num_parameters)
         .def("num_qubits", &ParametricCircuit::num_qubits)
         .def("num_clbits", &ParametricCircuit::num_clbits);
@@ -389,9 +429,9 @@ PYBIND11_MODULE(_pylqcs, m) {
            std::vector<double> initial_parameters) {
             Hamiltonian h;
             for (const auto& [c, p] : terms) h.push_back({c, p});
-            return vqe_gradient_descent(
-                h, ansatz,
-                {max_iterations, learning_rate, tol, std::move(initial_parameters)});
+            return vqe_gradient_descent(h, ansatz,
+                                        {max_iterations, learning_rate, tol,
+                                         std::move(initial_parameters)});
         },
         "hamiltonian"_a, "ansatz"_a, "max_iterations"_a = 200,
         "learning_rate"_a = 0.1, "tol"_a = 1e-9,
@@ -411,6 +451,35 @@ PYBIND11_MODULE(_pylqcs, m) {
     auto io_mod = m.def_submodule("io", "OpenQASM import/export");
     io_mod.def("to_qasm", &io::to_qasm, "circuit"_a);
     io_mod.def("from_qasm", &io::from_qasm, "source"_a);
+
+    // —— Stabilizer 后端（Clifford 电路，O(n²)，可达数千比特）——
+    py::class_<StabilizerTableau>(m, "StabilizerTableau")
+        .def(py::init<std::size_t>(), "num_qubits"_a)
+        .def("num_qubits", &StabilizerTableau::num_qubits)
+        .def("h", &StabilizerTableau::h)
+        .def("s", &StabilizerTableau::s)
+        .def("sdg", &StabilizerTableau::sdg)
+        .def("sx", &StabilizerTableau::sx)
+        .def("x", &StabilizerTableau::x)
+        .def("y", &StabilizerTableau::y)
+        .def("z", &StabilizerTableau::z)
+        .def("cx", &StabilizerTableau::cx)
+        .def("cy", &StabilizerTableau::cy)
+        .def("cz", &StabilizerTableau::cz)
+        .def("swap", &StabilizerTableau::swap)
+        .def("measure", &StabilizerTableau::measure, "qubit"_a, "random01"_a)
+        .def("stabilizers", &StabilizerTableau::stabilizers);
+
+    py::class_<StabilizerSimulator>(m, "StabilizerSimulator")
+        .def(py::init([](std::optional<std::uint64_t> seed) {
+                 return StabilizerSimulator({seed});
+             }),
+             "seed"_a = py::none())
+        .def("run", &StabilizerSimulator::run, "circuit"_a, "shots"_a = 1024,
+             py::call_guard<py::gil_scoped_release>())
+        .def("run_tableau", &StabilizerSimulator::run_tableau, "circuit"_a,
+             py::call_guard<py::gil_scoped_release>())
+        .def("name", &StabilizerSimulator::name);
 
     // —— 密度矩阵后端 ——
     py::class_<DensityMatrix>(m, "DensityMatrix")

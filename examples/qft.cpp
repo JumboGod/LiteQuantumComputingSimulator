@@ -15,7 +15,8 @@ QuantumCircuit build_qft(std::size_t n) {
     for (std::size_t i = n; i-- > 0;) {
         qc.h(static_cast<qubit_t>(i));
         for (std::size_t j = i; j-- > 0;) {
-            const double angle = std::numbers::pi / static_cast<double>(1ULL << (i - j));
+            const double angle =
+                std::numbers::pi / static_cast<double>(1ULL << (i - j));
             qc.cp(angle, static_cast<qubit_t>(j), static_cast<qubit_t>(i));
         }
     }
@@ -30,7 +31,7 @@ int main() {
     const std::size_t x = 5;  // 输入基态 |101>
 
     QuantumCircuit qc(n);
-    qc.x(0).x(2);             // 制备 |101> (qubit0 与 qubit2 置 1)
+    qc.x(0).x(2);  // 制备 |101> (qubit0 与 qubit2 置 1)
     qc.compose(build_qft(n));
 
     std::cout << "QFT(" << n << ") applied to |" << x << ">:\n\n"
@@ -42,7 +43,8 @@ int main() {
               << ", phase = 2*pi*" << x << "*k/" << dim << "):\n";
     for (std::size_t k = 0; k < dim; ++k) {
         std::printf("  |%zu>: %+.4f%+.4fi   |amp| = %.4f  phase = %+.4f\n", k,
-                    sv[k].real(), sv[k].imag(), std::abs(sv[k]), std::arg(sv[k]));
+                    sv[k].real(), sv[k].imag(), std::abs(sv[k]),
+                    std::arg(sv[k]));
     }
     return 0;
 }

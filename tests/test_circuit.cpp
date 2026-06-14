@@ -11,7 +11,8 @@ TEST(Circuit, FluentChainBuildsInstructions) {
     qc.h(0).cx(0, 1).measure_all();
     EXPECT_EQ(qc.num_instructions(), 4u);  // h + cx + 2 次 measure
     EXPECT_EQ(qc.instructions()[0].gate.type, GateType::H);
-    EXPECT_EQ(qc.instructions()[1].gate.type, GateType::X);  // CX = X + 1 控制位
+    EXPECT_EQ(qc.instructions()[1].gate.type,
+              GateType::X);  // CX = X + 1 控制位
     EXPECT_EQ(qc.instructions()[1].gate.n_controls, 1u);
     EXPECT_EQ(qc.instructions()[1].qubits, (std::vector<qubit_t>{0, 1}));
 }
@@ -42,8 +43,8 @@ TEST(Circuit, InverseReversesAndInverts) {
     QuantumCircuit qc(2);
     qc.s(0).cx(0, 1);
     auto inv = qc.inverse();
-    EXPECT_EQ(inv.instructions()[0].gate.type, GateType::X);   // cx 在前
-    EXPECT_EQ(inv.instructions()[1].gate.type, GateType::Sdg); // s → sdg
+    EXPECT_EQ(inv.instructions()[0].gate.type, GateType::X);    // cx 在前
+    EXPECT_EQ(inv.instructions()[1].gate.type, GateType::Sdg);  // s → sdg
     // 含测量的电路不可逆
     QuantumCircuit qm(1, 1);
     qm.h(0).measure(0, 0);
@@ -90,14 +91,14 @@ TEST(Circuit, MeasureAllExtendsClassicalRegister) {
 TEST(Circuit, DepthIsCriticalPath) {
     QuantumCircuit qc(3);
     EXPECT_EQ(qc.depth(), 0u);
-    qc.h(0);          // q0 层 1
-    qc.h(1);          // q1 层 1（与上面并行）
+    qc.h(0);  // q0 层 1
+    qc.h(1);  // q1 层 1（与上面并行）
     EXPECT_EQ(qc.depth(), 1u);
-    qc.cx(0, 1);      // q0/q1 层 2
-    qc.x(2);          // q2 层 1
+    qc.cx(0, 1);  // q0/q1 层 2
+    qc.x(2);      // q2 层 1
     EXPECT_EQ(qc.depth(), 2u);
-    qc.barrier();     // 不计入深度
+    qc.barrier();  // 不计入深度
     EXPECT_EQ(qc.depth(), 2u);
-    qc.cx(1, 2);      // 层 3
+    qc.cx(1, 2);  // 层 3
     EXPECT_EQ(qc.depth(), 3u);
 }

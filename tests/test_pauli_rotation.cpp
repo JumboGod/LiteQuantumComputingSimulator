@@ -114,8 +114,10 @@ TEST(PauliRotation, GateIsUnitaryAndInvertible) {
     for (std::size_t i = 0; i < dim; ++i) {
         for (std::size_t j = 0; j < dim; ++j) {
             complex_t sum{0, 0};
-            for (std::size_t l = 0; l < dim; ++l) sum += m[i * dim + l] * inv[l * dim + j];
-            const complex_t expected = (i == j) ? complex_t{1, 0} : complex_t{0, 0};
+            for (std::size_t l = 0; l < dim; ++l)
+                sum += m[i * dim + l] * inv[l * dim + j];
+            const complex_t expected =
+                (i == j) ? complex_t{1, 0} : complex_t{0, 0};
             EXPECT_NEAR(std::abs(sum - expected), 0.0, kTol);
         }
     }
@@ -124,8 +126,8 @@ TEST(PauliRotation, GateIsUnitaryAndInvertible) {
 TEST(PauliRotation, RejectsInvalidPauli) {
     QuantumCircuit qc(2);
     EXPECT_THROW(qc.rp(0.5, "XAB", {0, 1}), std::invalid_argument);  // 字符
-    EXPECT_THROW(qc.rp(0.5, "X", {0, 1}), std::invalid_argument);    // 长度不匹配
-    EXPECT_THROW(qc.rp(0.5, "", {}), std::invalid_argument);         // 空
+    EXPECT_THROW(qc.rp(0.5, "X", {0, 1}), std::invalid_argument);  // 长度不匹配
+    EXPECT_THROW(qc.rp(0.5, "", {}), std::invalid_argument);       // 空
 }
 
 // —— ParametricCircuit ——
@@ -133,10 +135,10 @@ TEST(PauliRotation, RejectsInvalidPauli) {
 TEST(ParametricCircuit, BindMatchesDirectConstruction) {
     // 固定门返回引用可链式；参数门返回参数索引，需分开调用
     ParametricCircuit pc(2);
-    EXPECT_EQ(pc.ry(0), 0u);   // 参数 0
-    EXPECT_EQ(pc.rx(1), 1u);   // 参数 1
+    EXPECT_EQ(pc.ry(0), 0u);  // 参数 0
+    EXPECT_EQ(pc.rx(1), 1u);  // 参数 1
     pc.cx(0, 1);
-    EXPECT_EQ(pc.rz(0), 2u);   // 参数 2
+    EXPECT_EQ(pc.rz(0), 2u);  // 参数 2
     EXPECT_EQ(pc.num_parameters(), 3u);
 
     const std::vector<double> theta = {0.4, 1.2, -0.7};
@@ -151,10 +153,12 @@ TEST(ParametricCircuit, RebindChangesAngles) {
     ParametricCircuit pc(1);
     pc.ry(0);
     auto sv0 = StatevectorSimulator().run_statevector(pc.bind({0.0}));
-    EXPECT_NEAR(std::abs(sv0[0] - complex_t{1, 0}), 0.0, kTol);  // RY(0)|0> = |0>
-    auto sv1 = StatevectorSimulator().run_statevector(
-        pc.bind({std::numbers::pi}));
-    EXPECT_NEAR(std::abs(sv1[1] - complex_t{1, 0}), 0.0, kTol);  // RY(π)|0> = |1>
+    EXPECT_NEAR(std::abs(sv0[0] - complex_t{1, 0}), 0.0,
+                kTol);  // RY(0)|0> = |0>
+    auto sv1 =
+        StatevectorSimulator().run_statevector(pc.bind({std::numbers::pi}));
+    EXPECT_NEAR(std::abs(sv1[1] - complex_t{1, 0}), 0.0,
+                kTol);  // RY(π)|0> = |1>
 }
 
 TEST(ParametricCircuit, ParametricPauliRotation) {
@@ -214,7 +218,7 @@ TEST(Gradient, VanishesAtOptimum) {
 
 TEST(GradientVQE, ConvergesToH2GroundState) {
     const Hamiltonian h2 = {
-        {-1.052373245772859, "II"}, {+0.39793742484318045, "IZ"},
+        {-1.052373245772859, "II"},   {+0.39793742484318045, "IZ"},
         {-0.39793742484318045, "ZI"}, {-0.01128010425623538, "ZZ"},
         {+0.18093119978423156, "XX"},
     };

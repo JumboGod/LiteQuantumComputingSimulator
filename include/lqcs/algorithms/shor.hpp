@@ -10,20 +10,20 @@
 namespace lqcs::algorithms {
 
 struct ShorOptions {
-    std::size_t shots        = 64;   // 每轮量子采样数
-    std::size_t max_attempts = 10;   // 最多随机尝试多少个底数 a
+    std::size_t shots = 64;             // 每轮量子采样数
+    std::size_t max_attempts = 10;      // 最多随机尝试多少个底数 a
     std::optional<std::uint64_t> seed;  // 固定后全流程可复现
 };
 
 struct ShorResult {
-    bool          success = false;
+    bool success = false;
     std::uint64_t N = 0;
     std::uint64_t factor1 = 0, factor2 = 0;
-    std::uint64_t a = 0;        // 成功（或经典捷径）使用的底数
-    std::uint64_t period = 0;   // 找到的周期 r（经典捷径时为 0）
-    std::size_t   attempts = 0; // 实际尝试轮数
-    std::map<std::string, std::size_t> counts;   // 计数寄存器测量分布
-    std::optional<QuantumCircuit> circuit;       // 成功那一轮的电路
+    std::uint64_t a = 0;       // 成功（或经典捷径）使用的底数
+    std::uint64_t period = 0;  // 找到的周期 r（经典捷径时为 0）
+    std::size_t attempts = 0;  // 实际尝试轮数
+    std::map<std::string, std::size_t> counts;  // 计数寄存器测量分布
+    std::optional<QuantumCircuit> circuit;      // 成功那一轮的电路
 };
 
 // Shor 质因数分解。

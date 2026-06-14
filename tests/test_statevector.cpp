@@ -66,19 +66,19 @@ TEST(Statevector, GHZState) {
 }
 
 TEST(Statevector, CXControlDirectionMatters) {
-    {   // control=0：|01> → |11>
+    {  // control=0：|01> → |11>
         QuantumCircuit qc(2);
         qc.x(0).cx(0, 1);
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 3, {1, 0});
     }
-    {   // control=1 但 qubit1 为 0：CX 不动作，仍是 |01>
+    {  // control=1 但 qubit1 为 0：CX 不动作，仍是 |01>
         QuantumCircuit qc(2);
         qc.x(0).cx(1, 0);
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 1, {1, 0});
     }
-    {   // control=1 为 1：|10> → |11>
+    {  // control=1 为 1：|10> → |11>
         QuantumCircuit qc(2);
         qc.x(1).cx(1, 0);
         auto sv = StatevectorSimulator().run_statevector(qc);
@@ -118,21 +118,30 @@ TEST(Statevector, HHIsIdentity) {
 
 TEST(Statevector, NormIsPreservedByRandomishCircuit) {
     QuantumCircuit qc(4);
-    qc.h(0).rx(0.3, 1).ry(1.1, 2).rz(2.2, 3)
-      .cx(0, 2).cz(1, 3).cp(0.5, 2, 3).swap(0, 1)
-      .t(0).sdg(2).sx(3).u(0.4, 1.5, 2.6, 1);
+    qc.h(0)
+        .rx(0.3, 1)
+        .ry(1.1, 2)
+        .rz(2.2, 3)
+        .cx(0, 2)
+        .cz(1, 3)
+        .cp(0.5, 2, 3)
+        .swap(0, 1)
+        .t(0)
+        .sdg(2)
+        .sx(3)
+        .u(0.4, 1.5, 2.6, 1);
     auto sv = StatevectorSimulator().run_statevector(qc);
     EXPECT_NEAR(sv.norm(), 1.0, 1e-12);
 }
 
 TEST(Statevector, ToffoliTruthTable) {
-    {   // 两个控制位都为 1 才翻转：|011> → |111>
+    {  // 两个控制位都为 1 才翻转：|011> → |111>
         QuantumCircuit qc(3);
         qc.x(0).x(1).ccx(0, 1, 2);
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 7, {1, 0});
     }
-    {   // 只有一个控制位为 1：不动作
+    {  // 只有一个控制位为 1：不动作
         QuantumCircuit qc(3);
         qc.x(0).ccx(0, 1, 2);
         auto sv = StatevectorSimulator().run_statevector(qc);
@@ -156,17 +165,19 @@ TEST(Statevector, PermutationGateMovesBasisStates) {
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 2, {1, 0});
     }
-    {   // 受控置换：控制位为 0 时不动作（Shor 受控模幂的雏形）
+    {  // 受控置换：控制位为 0 时不动作（Shor 受控模幂的雏形）
         QuantumCircuit qc(3);
         qc.x(0);  // 工作位 q0=1，控制位 q2=0
-        qc.append({Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
+        qc.append(
+            {Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 1, {1, 0});  // 不变
     }
-    {   // 控制位为 1 时动作
+    {  // 控制位为 1 时动作
         QuantumCircuit qc(3);
         qc.x(0).x(2);
-        qc.append({Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
+        qc.append(
+            {Gate{GateType::Permutation, {}, 1, {}, cycle}, {2, 0, 1}, {}});
         auto sv = StatevectorSimulator().run_statevector(qc);
         expect_amp(sv, 6, {1, 0});  // 工作寄存器 |01>→|10>，加上 q2=1 → idx 6
     }

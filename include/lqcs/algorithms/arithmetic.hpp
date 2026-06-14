@@ -15,6 +15,7 @@ namespace lqcs::algorithms {
 // 这是状态向量模拟器的合理捷径：物理电路需要可逆加法器网络，
 // 而模拟器直接应用置换，正确性等价、快几个数量级。
 QuantumCircuit modular_exponentiation(std::uint64_t a, std::uint64_t N,
-                                      std::size_t n_counting, std::size_t n_work);
+                                      std::size_t n_counting,
+                                      std::size_t n_work);
 
 }  // namespace lqcs::algorithms

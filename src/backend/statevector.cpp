@@ -13,12 +13,12 @@ Statevector::Statevector(std::size_t num_qubits) : num_qubits_(num_qubits) {
         throw std::invalid_argument("Statevector: num_qubits must be >= 1");
     }
     if (num_qubits > kMaxQubits) {
-        const double gib =
-            static_cast<double>(sizeof(complex_t)) * (1ULL << (num_qubits - 30));
+        const double gib = static_cast<double>(sizeof(complex_t)) *
+                           (1ULL << (num_qubits - 30));
         throw std::invalid_argument(
-            "Statevector: " + std::to_string(num_qubits) + " qubits would need " +
-            std::to_string(gib) + " GiB (max " + std::to_string(kMaxQubits) +
-            " qubits)");
+            "Statevector: " + std::to_string(num_qubits) +
+            " qubits would need " + std::to_string(gib) + " GiB (max " +
+            std::to_string(kMaxQubits) + " qubits)");
     }
     data_.assign(std::size_t{1} << num_qubits, complex_t{0.0, 0.0});
     data_[0] = complex_t{1.0, 0.0};
@@ -32,7 +32,8 @@ double Statevector::norm() const {
 
 std::vector<double> Statevector::probabilities() const {
     std::vector<double> probs(data_.size());
-    for (std::size_t i = 0; i < data_.size(); ++i) probs[i] = std::norm(data_[i]);
+    for (std::size_t i = 0; i < data_.size(); ++i)
+        probs[i] = std::norm(data_[i]);
     return probs;
 }
 
@@ -65,11 +66,10 @@ double Statevector::expectation_value(std::string_view pauli) const {
 
     const std::size_t n = data_.size();
     double sum_re = 0.0, sum_im = 0.0;
-#pragma omp parallel for schedule(static) reduction(+ : sum_re, sum_im) \
-    if (n >= (std::size_t{1} << 14))
+#pragma omp parallel for schedule(static) \
+    reduction(+ : sum_re, sum_im) if (n >= (std::size_t{1} << 14))
     for (std::size_t i = 0; i < n; ++i) {
-        const double sign =
-            (std::popcount(i & zy_mask) % 2 == 0) ? 1.0 : -1.0;
+        const double sign = (std::popcount(i & zy_mask) % 2 == 0) ? 1.0 : -1.0;
         const complex_t term = sign * data_[i] * std::conj(data_[i ^ x_mask]);
         sum_re += term.real();
         sum_im += term.imag();

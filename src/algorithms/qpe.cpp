@@ -11,7 +11,8 @@ namespace lqcs::algorithms {
 namespace {
 
 std::vector<complex_t> matmul(const std::vector<complex_t>& a,
-                              const std::vector<complex_t>& b, std::size_t dim) {
+                              const std::vector<complex_t>& b,
+                              std::size_t dim) {
     std::vector<complex_t> c(dim * dim, complex_t{0, 0});
     for (std::size_t i = 0; i < dim; ++i)
         for (std::size_t l = 0; l < dim; ++l)
@@ -31,7 +32,8 @@ QPEResult phase_estimation(const Gate& u, const QuantumCircuit& eigenstate_prep,
     const std::size_t k = u.base_qubits();
     if (eigenstate_prep.num_qubits() != k) {
         throw std::invalid_argument(
-            "phase_estimation: eigenstate_prep must act on the same qubits as u");
+            "phase_estimation: eigenstate_prep must act on the same qubits as "
+            "u");
     }
     const std::size_t t = n_counting;
     const std::size_t dim = std::size_t{1} << k;
@@ -40,7 +42,8 @@ QPEResult phase_estimation(const Gate& u, const QuantumCircuit& eigenstate_prep,
 
     // 工作寄存器制备本征态
     std::vector<qubit_t> work_map(k);
-    for (std::size_t w = 0; w < k; ++w) work_map[w] = static_cast<qubit_t>(t + w);
+    for (std::size_t w = 0; w < k; ++w)
+        work_map[w] = static_cast<qubit_t>(t + w);
     qc.compose(eigenstate_prep, work_map);
 
     // 计数寄存器叠加 + 受控 U^(2^j)（矩阵经典反复平方）

@@ -36,7 +36,8 @@ void bench_single_gates(std::size_t n) {
     const double cx = bench_gate(n, [&](auto& qc) { qc.cx(lo, hi); });
     const double ccx = bench_gate(n, [&](auto& qc) { qc.ccx(lo, 1, hi); });
     std::printf(
-        "n=%2zu  | H(q0) %8.2f | H(q%zu) %8.2f | T %8.2f | CX %8.2f | CCX %8.2f\n",
+        "n=%2zu  | H(q0) %8.2f | H(q%zu) %8.2f | T %8.2f | CX %8.2f | CCX "
+        "%8.2f\n",
         n, h_lo, n - 1, h_hi, t_diag, cx, ccx);
 }
 
@@ -70,20 +71,23 @@ void bench_fusion(std::size_t n, std::size_t gates_per_qubit) {
         }
     }
 
-    StatevectorSimulator plain({.fuse_gates = false});
-    StatevectorSimulator fused({.fuse_gates = true});
-
-    auto t0 = Clock::now();
-    auto sv1 = plain.run_statevector(qc);
-    const double t_plain = ms_since(t0);
-
-    t0 = Clock::now();
-    auto sv2 = fused.run_statevector(qc);
-    const double t_fused = ms_since(t0);
+    auto bench = [&](StatevectorSimulator sim) {
+        const auto t0 = Clock::now();
+        auto sv = sim.run_statevector(qc);
+        (void)sv[0];
+        return ms_since(t0);
+    };
+    const double t_plain = bench(StatevectorSimulator({.fuse_gates = false}));
+    const double t_1q = bench(
+        StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 1}));
+    const double t_k = bench(
+        StatevectorSimulator({.fuse_gates = true, .fusion_max_qubits = 4}));
 
     std::printf(
-        "fusion n=%zu (%zu gates): plain %.1f ms, fused %.1f ms  -> %.2fx\n", n,
-        qc.num_instructions(), t_plain, t_fused, t_plain / t_fused);
+        "fusion n=%zu (%zu gates): plain %.1f ms | 1-qubit %.1f ms (%.2fx) | "
+        "block-4 %.1f ms (%.2fx)\n",
+        n, qc.num_instructions(), t_plain, t_1q, t_plain / t_1q, t_k,
+        t_plain / t_k);
 }
 
 }  // namespace

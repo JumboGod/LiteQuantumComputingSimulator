@@ -60,20 +60,46 @@ QuantumCircuit random_circuit(std::size_t n, std::size_t n_gates,
     for (std::size_t i = 0; i < n_gates; ++i) {
         const int choice = static_cast<int>(rng() % 16);
         switch (choice) {
-            case 0:  qc.h(pick_qubits(1)[0]); break;
-            case 1:  qc.x(pick_qubits(1)[0]); break;
-            case 2:  qc.t(pick_qubits(1)[0]); break;
-            case 3:  qc.sx(pick_qubits(1)[0]); break;
-            case 4:  qc.rx(angle(rng), pick_qubits(1)[0]); break;
-            case 5:  qc.u(angle(rng), angle(rng), angle(rng), pick_qubits(1)[0]); break;
-            case 6:  { auto q = pick_qubits(2); qc.cx(q[0], q[1]); } break;
-            case 7:  { auto q = pick_qubits(2); qc.cp(angle(rng), q[0], q[1]); } break;
-            case 8:  { auto q = pick_qubits(2); qc.swap(q[0], q[1]); } break;
-            case 9:  { auto q = pick_qubits(2); qc.iswap(q[0], q[1]); } break;
-            case 10: { auto q = pick_qubits(2); qc.rxx(angle(rng), q[0], q[1]); } break;
-            case 11: { auto q = pick_qubits(2); qc.rzz(angle(rng), q[0], q[1]); } break;
-            case 12: { auto q = pick_qubits(3); qc.ccx(q[0], q[1], q[2]); } break;
-            case 13: { auto q = pick_qubits(3); qc.cswap(q[0], q[1], q[2]); } break;
+            case 0: qc.h(pick_qubits(1)[0]); break;
+            case 1: qc.x(pick_qubits(1)[0]); break;
+            case 2: qc.t(pick_qubits(1)[0]); break;
+            case 3: qc.sx(pick_qubits(1)[0]); break;
+            case 4: qc.rx(angle(rng), pick_qubits(1)[0]); break;
+            case 5:
+                qc.u(angle(rng), angle(rng), angle(rng), pick_qubits(1)[0]);
+                break;
+            case 6: {
+                auto q = pick_qubits(2);
+                qc.cx(q[0], q[1]);
+            } break;
+            case 7: {
+                auto q = pick_qubits(2);
+                qc.cp(angle(rng), q[0], q[1]);
+            } break;
+            case 8: {
+                auto q = pick_qubits(2);
+                qc.swap(q[0], q[1]);
+            } break;
+            case 9: {
+                auto q = pick_qubits(2);
+                qc.iswap(q[0], q[1]);
+            } break;
+            case 10: {
+                auto q = pick_qubits(2);
+                qc.rxx(angle(rng), q[0], q[1]);
+            } break;
+            case 11: {
+                auto q = pick_qubits(2);
+                qc.rzz(angle(rng), q[0], q[1]);
+            } break;
+            case 12: {
+                auto q = pick_qubits(3);
+                qc.ccx(q[0], q[1], q[2]);
+            } break;
+            case 13: {
+                auto q = pick_qubits(3);
+                qc.cswap(q[0], q[1], q[2]);
+            } break;
             case 14: {
                 auto q = pick_qubits(3);
                 qc.mcp(angle(rng), {q[0], q[1]}, q[2]);
@@ -107,7 +133,8 @@ TEST(Equivalence, KernelsMatchNaiveReferenceOnRandomCircuits) {
 
         SCOPED_TRACE("seed " + std::to_string(seed));
         for (std::size_t i = 0; i < ref.size(); ++i) {
-            EXPECT_NEAR(std::abs(sv[i] - ref[i]), 0.0, kTol) << "amplitude " << i;
+            EXPECT_NEAR(std::abs(sv[i] - ref[i]), 0.0, kTol)
+                << "amplitude " << i;
         }
     }
 }

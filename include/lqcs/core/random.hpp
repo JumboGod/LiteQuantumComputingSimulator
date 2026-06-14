@@ -8,7 +8,7 @@ namespace lqcs {
 
 // 可设种子的随机数引擎：固定种子时测量采样完全可复现
 class Rng {
-public:
+   public:
     explicit Rng(std::optional<std::uint64_t> seed = std::nullopt)
         : engine_(seed ? *seed : std::random_device{}()) {}
 
@@ -17,7 +17,7 @@ public:
 
     std::mt19937_64& engine() { return engine_; }
 
-private:
+   private:
     std::mt19937_64 engine_;
     std::uniform_real_distribution<double> dist_{0.0, 1.0};
 };

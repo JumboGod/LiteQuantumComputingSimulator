@@ -23,11 +23,10 @@ GroverResult grover(std::size_t n, std::span<const std::uint64_t> marked,
     }
 
     // 最优迭代次数：floor(π / (4·asin(√(M/N))))
-    const double theta = std::asin(
-        std::sqrt(static_cast<double>(marked.size()) / static_cast<double>(dim)));
-    const std::size_t iters =
-        iterations.value_or(std::max<std::size_t>(
-            1, static_cast<std::size_t>(std::numbers::pi / (4.0 * theta))));
+    const double theta = std::asin(std::sqrt(
+        static_cast<double>(marked.size()) / static_cast<double>(dim)));
+    const std::size_t iters = iterations.value_or(std::max<std::size_t>(
+        1, static_cast<std::size_t>(std::numbers::pi / (4.0 * theta))));
 
     const QuantumCircuit oracle = phase_oracle(n, marked);
     const std::vector<std::uint64_t> all_zero = {0};

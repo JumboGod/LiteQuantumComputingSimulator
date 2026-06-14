@@ -16,7 +16,8 @@ TEST(DensityMatrix, PureEvolutionMatchesStatevector) {
     QuantumCircuit qc(3);
     qc.h(0).cx(0, 1).t(1).cswap(0, 1, 2).rx(0.7, 2).ccx(0, 2, 1);
 
-    const auto sv = StatevectorSimulator({.fuse_gates = false}).run_statevector(qc);
+    const auto sv =
+        StatevectorSimulator({.fuse_gates = false}).run_statevector(qc);
     const auto rho = DensityMatrixSimulator().run_density_matrix(qc);
 
     // ρ = |ψ><ψ|：逐矩阵元对比

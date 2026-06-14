@@ -66,7 +66,9 @@ SimonResult simon(std::size_t n,
     }
 
     // 采样 y（必满足 y·s = 0），凑满 rank n-1 后解出 s
-    StatevectorSimulator sim({.seed = seed});
+    StatevectorSimulator::Options sv_opt;
+    sv_opt.seed = seed;
+    StatevectorSimulator sim(sv_opt);
     std::vector<std::uint64_t> basis;
     std::size_t samples = 0;
     constexpr std::size_t kMaxRounds = 8;

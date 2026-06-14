@@ -8,7 +8,7 @@
 namespace lqcs::algorithms {
 
 struct BernsteinVaziraniResult {
-    std::uint64_t secret;    // 恢复出的隐藏串 s
+    std::uint64_t secret;  // 恢复出的隐藏串 s
     QuantumCircuit circuit;
 };
 

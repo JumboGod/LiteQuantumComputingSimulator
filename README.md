@@ -1,8 +1,12 @@
 # LiteQuantumComputingSimulator
 
+[![CI](https://github.com/JumboGod/LiteQuantumComputingSimulator/actions/workflows/ci.yml/badge.svg)](https://github.com/JumboGod/LiteQuantumComputingSimulator/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![C++20](https://img.shields.io/badge/C%2B%2B-20-blue.svg)](https://en.cppreference.com/w/cpp/20)
+
 轻量级、高性能的量子计算模拟器，使用现代 C++（C++20）编写，API 设计参考 Qiskit。
 
-详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)。
+详细架构见 [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)，贡献指南见 [CONTRIBUTING.md](CONTRIBUTING.md)。
 
 ## 当前进度
 
@@ -29,6 +33,17 @@
   exp(-iθ/2·P) 专用 O(2ⁿ) 内核（UCCSD ansatz 主力门）、ParametricCircuit
   参数槽原位绑定（bind 不重建结构）、parameter-shift 解析梯度、
   梯度下降 VQE
+- ✅ **M9 多比特门融合**（对标 qsim/Aer）：贪心地把相邻门（含 CX/CCX）
+  聚合成 ≤k 比特稠密块（默认 4），把多次全状态向量扫描合并为一次；
+  实测相比无融合 ~30x、相比单比特融合再快 ~5x
+- ✅ **M10 Stabilizer 模拟器**（对标 Stim/Aer）：Aaronson-Gottesman
+  tableau 算法，Clifford 电路 O(n²) 内存/时间，实测 5000 比特 GHZ
+  秒级完成（状态向量法需 2⁵⁰⁰⁰ 振幅）；与状态向量分布交叉验证一致，
+  量子纠错码/图态模拟的关键能力
+- ✅ **M11 显式 SIMD 内核**（对标 Qulacs）：AVX2+FMA 复数内核，单比特
+  门按「块」结构遍历（两半各自连续，利于向量化），实测无融合路径
+  ~2.3x、QFT(24) ~1.2x；状态向量模拟受内存带宽限制，增益主要体现在
+  计算密集的对角/高位目标门。`LQCS_ENABLE_AVX2=OFF` 可回退纯标量
 
 实测性能（4 核容器，`benchmarks/lqcs_bench`）：26 比特单门 135~275 ms，
 QFT(24) 3.4 s，门融合对单比特门密集电路加速 5.3~5.7 倍。
@@ -93,6 +108,21 @@ ctest --test-dir build --output-on-failure
 ./build/examples/bell_state
 ./build/examples/ghz_state
 ```
+
+### CMake 选项
+
+| 选项 | 默认 | 说明 |
+|------|:----:|------|
+| `LQCS_BUILD_TESTS` | ON | 构建 GoogleTest 单元测试 |
+| `LQCS_BUILD_EXAMPLES` | ON | 构建示例程序 |
+| `LQCS_BUILD_BENCHMARKS` | ON | 构建性能基准 |
+| `LQCS_BUILD_PYTHON` | OFF | 构建 pybind11 Python 绑定 |
+| `LQCS_ENABLE_OPENMP` | ON | OpenMP 并行内核 |
+| `LQCS_ENABLE_AVX2` | ON | AVX2+FMA SIMD 内核（x86-64；自动探测，不支持则跳过） |
+| `LQCS_ENABLE_SANITIZERS` | OFF | AddressSanitizer + UBSan（调试/CI） |
+
+持续集成（[CI](.github/workflows/ci.yml)）在 Linux/macOS/Windows × Debug/Release
+上构建并测试，另含 ASan+UBSan、无 AVX2 标量回退、Python 绑定与 clang-format 检查。
 
 ## Windows / Visual Studio 2022
 

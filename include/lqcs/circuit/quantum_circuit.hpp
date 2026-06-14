@@ -15,7 +15,7 @@ namespace lqcs {
 // 比特序约定（与 Qiskit 一致，little-endian）：qubit 0 为最低有效位。
 // 受控门约定：指令的 qubits 中控制位在前、目标位在后。
 class QuantumCircuit {
-public:
+   public:
     explicit QuantumCircuit(std::size_t num_qubits, std::size_t num_clbits = 0);
 
     // —— 单比特无参门 ——
@@ -46,10 +46,11 @@ public:
     QuantumCircuit& crx(double theta, qubit_t control, qubit_t target);
     QuantumCircuit& cry(double theta, qubit_t control, qubit_t target);
     QuantumCircuit& crz(double theta, qubit_t control, qubit_t target);
-    QuantumCircuit& ccx(qubit_t c1, qubit_t c2, qubit_t target);  // Toffoli
-    QuantumCircuit& cswap(qubit_t control, qubit_t a, qubit_t b); // Fredkin
+    QuantumCircuit& ccx(qubit_t c1, qubit_t c2, qubit_t target);   // Toffoli
+    QuantumCircuit& cswap(qubit_t control, qubit_t a, qubit_t b);  // Fredkin
     QuantumCircuit& mcx(std::span<const qubit_t> controls, qubit_t target);
-    QuantumCircuit& mcx(std::initializer_list<qubit_t> controls, qubit_t target);
+    QuantumCircuit& mcx(std::initializer_list<qubit_t> controls,
+                        qubit_t target);
     QuantumCircuit& mcp(double lambda, std::span<const qubit_t> controls,
                         qubit_t target);
     QuantumCircuit& mcp(double lambda, std::initializer_list<qubit_t> controls,
@@ -106,15 +107,15 @@ public:
     std::span<const Instruction> instructions() const { return instructions_; }
     std::size_t depth() const;  // 关键路径长度（Barrier 不计入）
 
-    std::string draw() const;   // ASCII 电路图
+    std::string draw() const;  // ASCII 电路图
 
-private:
+   private:
     QuantumCircuit& add_gate(Gate gate, std::vector<qubit_t> qubits);
     void check_qubit(qubit_t q) const;
     void check_clbit(clbit_t c) const;
 
-    std::size_t              num_qubits_;
-    std::size_t              num_clbits_;
+    std::size_t num_qubits_;
+    std::size_t num_clbits_;
     std::vector<Instruction> instructions_;
 };
 

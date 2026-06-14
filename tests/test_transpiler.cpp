@@ -137,14 +137,18 @@ TEST(Simulator, FusionOptionPreservesResults) {
     // 末尾测量路径：同种子下融合开/关 counts 完全一致
     QuantumCircuit qc(3, 3);
     qc.h(0).t(0).cx(0, 1).rx(0.4, 2).sx(2).cx(1, 2).measure_all();
-    auto on = StatevectorSimulator({.seed = 5, .fuse_gates = true}).run(qc, 512);
-    auto off = StatevectorSimulator({.seed = 5, .fuse_gates = false}).run(qc, 512);
+    auto on =
+        StatevectorSimulator({.seed = 5, .fuse_gates = true}).run(qc, 512);
+    auto off =
+        StatevectorSimulator({.seed = 5, .fuse_gates = false}).run(qc, 512);
     EXPECT_EQ(on.counts(), off.counts());
 
     // 逐 shot 路径（中间测量）：rng 消耗序列不变，结果同样一致
     QuantumCircuit qm(2, 2);
     qm.h(0).t(0).measure(0, 0).h(1).cx(0, 1).measure(1, 1);
-    auto pon = StatevectorSimulator({.seed = 9, .fuse_gates = true}).run(qm, 256);
-    auto poff = StatevectorSimulator({.seed = 9, .fuse_gates = false}).run(qm, 256);
+    auto pon =
+        StatevectorSimulator({.seed = 9, .fuse_gates = true}).run(qm, 256);
+    auto poff =
+        StatevectorSimulator({.seed = 9, .fuse_gates = false}).run(qm, 256);
     EXPECT_EQ(pon.counts(), poff.counts());
 }

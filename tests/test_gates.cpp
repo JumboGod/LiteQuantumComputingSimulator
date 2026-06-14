@@ -25,14 +25,16 @@ std::vector<complex_t> matmul(const std::vector<complex_t>& a,
 std::vector<complex_t> dagger(const std::vector<complex_t>& a, std::size_t k) {
     std::vector<complex_t> d(k * k);
     for (std::size_t i = 0; i < k; ++i)
-        for (std::size_t j = 0; j < k; ++j) d[j * k + i] = std::conj(a[i * k + j]);
+        for (std::size_t j = 0; j < k; ++j)
+            d[j * k + i] = std::conj(a[i * k + j]);
     return d;
 }
 
 void expect_identity(const std::vector<complex_t>& a, std::size_t k) {
     for (std::size_t i = 0; i < k; ++i)
         for (std::size_t j = 0; j < k; ++j) {
-            const complex_t expected = (i == j) ? complex_t{1, 0} : complex_t{0, 0};
+            const complex_t expected =
+                (i == j) ? complex_t{1, 0} : complex_t{0, 0};
             EXPECT_NEAR(std::abs(a[i * k + j] - expected), 0.0, kTol)
                 << "entry (" << i << "," << j << ")";
         }
@@ -49,29 +51,43 @@ void expect_matrix_eq(const std::vector<complex_t>& a,
 // 测试用门集合：覆盖所有类型与控制位组合
 std::vector<Gate> all_test_gates() {
     const double th = 0.7321;
-    const std::vector<complex_t> rot_mat = {  // RY(0.6) 的矩阵：任意自定义幺正
+    const std::vector<complex_t> rot_mat = {
+        // RY(0.6) 的矩阵：任意自定义幺正
         std::cos(0.3), -std::sin(0.3), std::sin(0.3), std::cos(0.3)};
     const std::vector<std::size_t> cycle4 = {1, 2, 3, 0};
     return {
-        {GateType::I, {}},    {GateType::X, {}},     {GateType::Y, {}},
-        {GateType::Z, {}},    {GateType::H, {}},     {GateType::S, {}},
-        {GateType::Sdg, {}},  {GateType::T, {}},     {GateType::Tdg, {}},
-        {GateType::SX, {}},   {GateType::RX, {th}},  {GateType::RY, {th}},
-        {GateType::RZ, {th}}, {GateType::P, {th}},   {GateType::U, {th, 0.3, 1.1}},
-        {GateType::SWAP, {}}, {GateType::iSWAP, {}}, {GateType::RXX, {th}},
-        {GateType::RYY, {th}}, {GateType::RZZ, {th}},
-        {GateType::X, {}, 1},                  // CX
-        {GateType::Z, {}, 1},                  // CZ
-        {GateType::Y, {}, 1},                  // CY
-        {GateType::H, {}, 1},                  // CH
-        {GateType::P, {th}, 1},                // CP
-        {GateType::RX, {th}, 1},               // CRX
-        {GateType::X, {}, 2},                  // CCX
-        {GateType::SWAP, {}, 1},               // CSWAP
-        {GateType::X, {}, 3},                  // MCX
-        {GateType::P, {th}, 3},                // MCP
+        {GateType::I, {}},
+        {GateType::X, {}},
+        {GateType::Y, {}},
+        {GateType::Z, {}},
+        {GateType::H, {}},
+        {GateType::S, {}},
+        {GateType::Sdg, {}},
+        {GateType::T, {}},
+        {GateType::Tdg, {}},
+        {GateType::SX, {}},
+        {GateType::RX, {th}},
+        {GateType::RY, {th}},
+        {GateType::RZ, {th}},
+        {GateType::P, {th}},
+        {GateType::U, {th, 0.3, 1.1}},
+        {GateType::SWAP, {}},
+        {GateType::iSWAP, {}},
+        {GateType::RXX, {th}},
+        {GateType::RYY, {th}},
+        {GateType::RZZ, {th}},
+        {GateType::X, {}, 1},     // CX
+        {GateType::Z, {}, 1},     // CZ
+        {GateType::Y, {}, 1},     // CY
+        {GateType::H, {}, 1},     // CH
+        {GateType::P, {th}, 1},   // CP
+        {GateType::RX, {th}, 1},  // CRX
+        {GateType::X, {}, 2},     // CCX
+        {GateType::SWAP, {}, 1},  // CSWAP
+        {GateType::X, {}, 3},     // MCX
+        {GateType::P, {th}, 3},   // MCP
         {GateType::Unitary, {}, 0, rot_mat},
-        {GateType::Unitary, {}, 2, rot_mat},   // 受控自定义幺正
+        {GateType::Unitary, {}, 2, rot_mat},  // 受控自定义幺正
         {GateType::Permutation, {}, 0, {}, cycle4},
         {GateType::Permutation, {}, 1, {}, cycle4},  // 受控置换
     };

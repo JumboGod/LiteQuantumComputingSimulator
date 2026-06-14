@@ -30,13 +30,16 @@ TEST(Measurement, BellDistribution) {
 
     std::size_t total = 0;
     for (const auto& [key, count] : result.counts()) {
-        EXPECT_TRUE(key == "00" || key == "11") << "unexpected outcome: " << key;
+        EXPECT_TRUE(key == "00" || key == "11")
+            << "unexpected outcome: " << key;
         total += count;
     }
     EXPECT_EQ(total, shots);
     // 双侧 5σ 余量内（σ = √(N·p·(1-p)) = 32）
-    EXPECT_NEAR(static_cast<double>(result.counts().at("00")), shots / 2.0, 160.0);
-    EXPECT_NEAR(static_cast<double>(result.counts().at("11")), shots / 2.0, 160.0);
+    EXPECT_NEAR(static_cast<double>(result.counts().at("00")), shots / 2.0,
+                160.0);
+    EXPECT_NEAR(static_cast<double>(result.counts().at("11")), shots / 2.0,
+                160.0);
 }
 
 TEST(Measurement, SameSeedReproduces) {
@@ -66,12 +69,12 @@ TEST(Measurement, ProbabilitiesSumToOne) {
 }
 
 TEST(Measurement, RejectsUnsupportedCircuits) {
-    {   // 无测量
+    {  // 无测量
         QuantumCircuit qc(1, 1);
         qc.h(0);
         EXPECT_THROW(StatevectorSimulator().run(qc, 10), std::invalid_argument);
     }
-    {   // shots = 0
+    {  // shots = 0
         QuantumCircuit qc(1, 1);
         qc.measure(0, 0);
         EXPECT_THROW(StatevectorSimulator().run(qc, 0), std::invalid_argument);
@@ -97,8 +100,8 @@ TEST(Measurement, GroverFindsMarkedState) {
 
     const std::size_t shots = 4096;
     auto result = seeded(2026).run(qc, shots);
-    const double p101 =
-        static_cast<double>(result.counts().at("101")) / static_cast<double>(shots);
+    const double p101 = static_cast<double>(result.counts().at("101")) /
+                        static_cast<double>(shots);
     EXPECT_GT(p101, 0.90);
     EXPECT_LT(p101, 0.99);
 }

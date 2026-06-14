@@ -19,7 +19,8 @@ void check_probability(double p, const char* name) {
 KrausChannel::KrausChannel(std::vector<std::array<complex_t, 4>> kraus_ops)
     : ops(std::move(kraus_ops)) {
     if (ops.empty()) {
-        throw std::invalid_argument("KrausChannel: needs at least one operator");
+        throw std::invalid_argument(
+            "KrausChannel: needs at least one operator");
     }
     // 完备性校验：Σ K_i† K_i = I
     std::array<complex_t, 4> sum = {0, 0, 0, 0};
@@ -44,10 +45,10 @@ KrausChannel KrausChannel::depolarizing(double p) {
     const double kp = std::sqrt(p / 4.0);
     const complex_t i{0, 1};
     return KrausChannel({
-        {k0, 0, 0, k0},            // √(1-3p/4)·I
-        {0, kp, kp, 0},            // √(p/4)·X
-        {0, -kp * i, kp * i, 0},   // √(p/4)·Y
-        {kp, 0, 0, -kp},           // √(p/4)·Z
+        {k0, 0, 0, k0},           // √(1-3p/4)·I
+        {0, kp, kp, 0},           // √(p/4)·X
+        {0, -kp * i, kp * i, 0},  // √(p/4)·Y
+        {kp, 0, 0, -kp},          // √(p/4)·Z
     });
 }
 

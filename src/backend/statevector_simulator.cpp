@@ -27,8 +27,8 @@ void apply_instruction(Statevector& sv, const Instruction& inst) {
     const qubit_t* targets = inst.qubits.data() + nc;
 
     if (g.type == GateType::Permutation) {
-        kernels::apply_controlled_permutation(sv.data(), sv.size(), controls, nc,
-                                              targets, k, g.perm.data());
+        kernels::apply_controlled_permutation(sv.data(), sv.size(), controls,
+                                              nc, targets, k, g.perm.data());
         return;
     }
 
@@ -37,8 +37,10 @@ void apply_instruction(Statevector& sv, const Instruction& inst) {
         const auto pm = g.pauli_masks();
         std::size_t x_global = 0, zy_global = 0;
         for (std::size_t j = 0; j < k; ++j) {
-            if (pm.x & (std::size_t{1} << j)) x_global |= std::size_t{1} << targets[j];
-            if (pm.zy & (std::size_t{1} << j)) zy_global |= std::size_t{1} << targets[j];
+            if (pm.x & (std::size_t{1} << j))
+                x_global |= std::size_t{1} << targets[j];
+            if (pm.zy & (std::size_t{1} << j))
+                zy_global |= std::size_t{1} << targets[j];
         }
         kernels::apply_pauli_rotation(sv.data(), sv.size(), x_global, zy_global,
                                       pm.n_y, g.params.at(0));
@@ -64,8 +66,8 @@ void apply_instruction(Statevector& sv, const Instruction& inst) {
         }
         if (k == 2) {
             const auto m = g.base_matrix();
-            kernels::apply_two_qubit(sv.data(), sv.size(), targets[0], targets[1],
-                                     m.data());
+            kernels::apply_two_qubit(sv.data(), sv.size(), targets[0],
+                                     targets[1], m.data());
             return;
         }
     }
@@ -73,15 +75,15 @@ void apply_instruction(Statevector& sv, const Instruction& inst) {
     // 单控制单比特快路径
     if (nc == 1 && k == 1) {
         const auto m = g.base_matrix();
-        kernels::apply_controlled_single_qubit(sv.data(), sv.size(), controls[0],
-                                               targets[0], m.data());
+        kernels::apply_controlled_single_qubit(
+            sv.data(), sv.size(), controls[0], targets[0], m.data());
         return;
     }
 
     // 通用路径：任意控制位数 + 任意基门
     const auto m = g.base_matrix();
-    kernels::apply_controlled_unitary(sv.data(), sv.size(), controls, nc, targets,
-                                      k, m.data());
+    kernels::apply_controlled_unitary(sv.data(), sv.size(), controls, nc,
+                                      targets, k, m.data());
 }
 
 // 末尾测量电路的快速路径：演化一次，对概率分布采样 shots 次
@@ -171,8 +173,7 @@ Result run_per_shot(const QuantumCircuit& circuit, std::size_t shots, Rng& rng,
                     kernels::reset_qubit(sv.data(), sv.size(), inst.qubits[0],
                                          rng.uniform());
                     break;
-                case GateType::Barrier:
-                    break;
+                case GateType::Barrier: break;
                 default:
                     apply_instruction(sv, inst);
                     if (!noise.empty()) {
@@ -199,7 +200,8 @@ Statevector evolve(const QuantumCircuit& circuit) {
     for (const auto& inst : circuit.instructions()) {
         if (inst.gate.type == GateType::Reset) {
             throw std::invalid_argument(
-                "run_statevector: Reset is non-deterministic; use run() instead");
+                "run_statevector: Reset is non-deterministic; use run() "
+                "instead");
         }
         if (inst.gate.is_unitary()) apply_instruction(sv, inst);
     }
@@ -214,22 +216,26 @@ void StatevectorSimulator::configure_threads() const {
 #endif
 }
 
-QuantumCircuit StatevectorSimulator::maybe_fuse(const QuantumCircuit& circuit) const {
+QuantumCircuit StatevectorSimulator::maybe_fuse(
+    const QuantumCircuit& circuit) const {
     if (!options_.fuse_gates) return circuit;
-    return SingleQubitGateFusion().run(circuit);
+    return GateFusion(options_.fusion_max_qubits).run(circuit);
 }
 
-Statevector StatevectorSimulator::run_statevector(const QuantumCircuit& circuit) const {
+Statevector StatevectorSimulator::run_statevector(
+    const QuantumCircuit& circuit) const {
     if (!options_.noise.empty()) {
         throw std::invalid_argument(
-            "run_statevector: noisy simulation is stochastic (one trajectory is "
+            "run_statevector: noisy simulation is stochastic (one trajectory "
+            "is "
             "not the quantum state); use run() or DensityMatrixSimulator");
     }
     configure_threads();
     return evolve(maybe_fuse(circuit));
 }
 
-Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shots) {
+Result StatevectorSimulator::run(const QuantumCircuit& circuit,
+                                 std::size_t shots) {
     if (shots == 0) {
         throw std::invalid_argument("run: shots must be >= 1");
     }
@@ -252,7 +258,8 @@ Result StatevectorSimulator::run(const QuantumCircuit& circuit, std::size_t shot
     }
     if (!seen_measure) {
         throw std::invalid_argument(
-            "run: circuit has no measurements; use run_statevector() to inspect "
+            "run: circuit has no measurements; use run_statevector() to "
+            "inspect "
             "the final state");
     }
 

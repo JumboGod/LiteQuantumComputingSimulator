@@ -99,7 +99,9 @@ ShorResult shor(std::uint64_t N, const ShorOptions& options) {
             qc.measure(static_cast<qubit_t>(j), static_cast<clbit_t>(j));
         }
 
-        StatevectorSimulator sim({.seed = rng.engine()()});
+        StatevectorSimulator::Options sv_opt;
+        sv_opt.seed = rng.engine()();
+        StatevectorSimulator sim(sv_opt);
         const Result run = sim.run(qc, options.shots);
 
         // —— 连分数后处理：按出现频次从高到低处理测量值 ——

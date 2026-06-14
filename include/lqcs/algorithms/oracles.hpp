@@ -15,6 +15,7 @@ QuantumCircuit xor_oracle(std::size_t n_in, std::size_t n_out,
                           const std::function<std::uint64_t(std::uint64_t)>& f);
 
 // 相位 oracle：对每个 marked 基态翻转相位（|m> → -|m>）
-QuantumCircuit phase_oracle(std::size_t n, std::span<const std::uint64_t> marked);
+QuantumCircuit phase_oracle(std::size_t n,
+                            std::span<const std::uint64_t> marked);
 
 }  // namespace lqcs::algorithms

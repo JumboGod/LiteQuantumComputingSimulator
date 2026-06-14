@@ -13,7 +13,7 @@ namespace lqcs::algorithms {
 
 // 哈密顿量 = Pauli 串的实系数线性组合
 struct PauliTerm {
-    double      coeff;
+    double coeff;
     std::string pauli;  // 与 Qiskit 一致：最左字符 = 最高位比特
 };
 using Hamiltonian = std::vector<PauliTerm>;
@@ -25,16 +25,16 @@ double expectation(const Statevector& sv, const Hamiltonian& hamiltonian);
 using Ansatz = std::function<QuantumCircuit(std::span<const double>)>;
 
 struct VQEOptions {
-    std::size_t max_iterations = 100;   // 最多多少轮全参数扫描
-    double      tol = 1e-9;             // 一轮能量改善小于 tol 即收敛
+    std::size_t max_iterations = 100;  // 最多多少轮全参数扫描
+    double tol = 1e-9;                 // 一轮能量改善小于 tol 即收敛
     std::vector<double> initial_parameters;  // 缺省为全 0
 };
 
 struct VQEResult {
-    double              energy;       // 收敛能量（变分上界）
-    std::vector<double> parameters;   // 最优参数
-    std::size_t         iterations;   // 实际轮数
-    std::vector<double> history;      // 每轮结束时的能量
+    double energy;                   // 收敛能量（变分上界）
+    std::vector<double> parameters;  // 最优参数
+    std::size_t iterations;          // 实际轮数
+    std::vector<double> history;     // 每轮结束时的能量
 };
 
 // 变分量子本征求解器，Rotosolve 优化器：
@@ -54,8 +54,8 @@ std::vector<double> parameter_shift_gradient(const Hamiltonian& hamiltonian,
 // 基于 parameter-shift 梯度的梯度下降 VQE（带可选动量）。
 struct GradientVQEOptions {
     std::size_t max_iterations = 200;
-    double      learning_rate = 0.1;
-    double      tol = 1e-9;            // 梯度范数小于 tol 即收敛
+    double learning_rate = 0.1;
+    double tol = 1e-9;                       // 梯度范数小于 tol 即收敛
     std::vector<double> initial_parameters;  // 缺省为全 0
 };
 

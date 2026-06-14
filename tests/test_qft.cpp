@@ -38,9 +38,11 @@ void check_qft_on_basis_state(std::size_t n, std::size_t x) {
     const std::size_t dim = std::size_t{1} << n;
     const double amp = 1.0 / std::sqrt(static_cast<double>(dim));
     for (std::size_t k = 0; k < dim; ++k) {
-        const double phase = 2.0 * std::numbers::pi * static_cast<double>(x * k) /
+        const double phase = 2.0 * std::numbers::pi *
+                             static_cast<double>(x * k) /
                              static_cast<double>(dim);
-        const complex_t expected = amp * complex_t{std::cos(phase), std::sin(phase)};
+        const complex_t expected =
+            amp * complex_t{std::cos(phase), std::sin(phase)};
         EXPECT_NEAR(std::abs(sv[k] - expected), 0.0, kTol)
             << "n=" << n << " x=" << x << " k=" << k;
     }
