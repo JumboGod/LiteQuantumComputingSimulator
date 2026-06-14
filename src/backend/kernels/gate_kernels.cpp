@@ -7,6 +7,7 @@
 #include <vector>
 
 #include "lqcs/core/bit_utils.hpp"
+#include "simd.hpp"
 
 namespace lqcs::kernels {
 
@@ -23,26 +24,72 @@ std::size_t expand(std::size_t g, const std::vector<unsigned>& sorted_positions)
 
 }  // namespace
 
+// 单比特门按「块」结构遍历：目标位 k 把态切成 n_amps/(2·stride) 个块，
+// 每块前 stride 个振幅为 |0> 半、后 stride 个为 |1> 半，块内两半各自连续，
+// 利于 SIMD 与缓存。stride = 2^k。
 void apply_single_qubit(complex_t* state, std::size_t n_amps, qubit_t target,
                         const complex_t m[4]) {
-    const std::size_t n_groups = n_amps / 2;
+    const std::size_t stride = std::size_t{1} << target;
+    const std::size_t block = 2 * stride;
+    const std::size_t n_blocks = n_amps / block;
     const complex_t m0 = m[0], m1 = m[1], m2 = m[2], m3 = m[3];
 #pragma omp parallel for schedule(static) if (n_amps >= kParallelThreshold)
-    for (std::size_t g = 0; g < n_groups; ++g) {
-        const std::size_t i0 = bits::insert_zero_bit(g, target);
-        const std::size_t i1 = i0 | (std::size_t{1} << target);
-        const complex_t a0 = state[i0];
-        const complex_t a1 = state[i1];
-        state[i0] = m0 * a0 + m1 * a1;
-        state[i1] = m2 * a0 + m3 * a1;
+    for (std::size_t b = 0; b < n_blocks; ++b) {
+        complex_t* p0 = state + b * block;
+        complex_t* p1 = p0 + stride;
+        std::size_t off = 0;
+#if defined(__AVX2__)
+        // 两半各自连续：每次处理 2 个复振幅对
+        const double m0r = m0.real(), m0i = m0.imag();
+        const double m1r = m1.real(), m1i = m1.imag();
+        const double m2r = m2.real(), m2i = m2.imag();
+        const double m3r = m3.real(), m3i = m3.imag();
+        for (; off + 2 <= stride; off += 2) {
+            const __m256d a0 = _mm256_loadu_pd(reinterpret_cast<double*>(p0 + off));
+            const __m256d a1 = _mm256_loadu_pd(reinterpret_cast<double*>(p1 + off));
+            const __m256d r0 = simd::cmul_add(simd::cmul(a0, m0r, m0i), a1, m1r, m1i);
+            const __m256d r1 = simd::cmul_add(simd::cmul(a0, m2r, m2i), a1, m3r, m3i);
+            _mm256_storeu_pd(reinterpret_cast<double*>(p0 + off), r0);
+            _mm256_storeu_pd(reinterpret_cast<double*>(p1 + off), r1);
+        }
+#endif
+        for (; off < stride; ++off) {
+            const complex_t a0 = p0[off];
+            const complex_t a1 = p1[off];
+            p0[off] = m0 * a0 + m1 * a1;
+            p1[off] = m2 * a0 + m3 * a1;
+        }
     }
 }
 
 void apply_diagonal_single_qubit(complex_t* state, std::size_t n_amps,
                                  qubit_t target, complex_t d0, complex_t d1) {
+    const std::size_t stride = std::size_t{1} << target;
+    const std::size_t block = 2 * stride;
+    const std::size_t n_blocks = n_amps / block;
 #pragma omp parallel for schedule(static) if (n_amps >= kParallelThreshold)
-    for (std::size_t i = 0; i < n_amps; ++i) {
-        state[i] *= bits::test_bit(i, target) ? d1 : d0;
+    for (std::size_t b = 0; b < n_blocks; ++b) {
+        complex_t* p0 = state + b * block;  // |0> 半 × d0
+        complex_t* p1 = p0 + stride;        // |1> 半 × d1
+        std::size_t off = 0;
+#if defined(__AVX2__)
+        const double d0r = d0.real(), d0i = d0.imag();
+        const double d1r = d1.real(), d1i = d1.imag();
+        for (; off + 2 <= stride; off += 2) {
+            _mm256_storeu_pd(
+                reinterpret_cast<double*>(p0 + off),
+                simd::cmul(_mm256_loadu_pd(reinterpret_cast<double*>(p0 + off)),
+                           d0r, d0i));
+            _mm256_storeu_pd(
+                reinterpret_cast<double*>(p1 + off),
+                simd::cmul(_mm256_loadu_pd(reinterpret_cast<double*>(p1 + off)),
+                           d1r, d1i));
+        }
+#endif
+        for (; off < stride; ++off) {
+            p0[off] *= d0;
+            p1[off] *= d1;
+        }
     }
 }
 

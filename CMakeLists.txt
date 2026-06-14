@@ -14,6 +14,7 @@ option(LQCS_BUILD_EXAMPLES "Build examples" ON)
 option(LQCS_BUILD_PYTHON "Build Python bindings (pylqcs)" OFF)
 option(LQCS_BUILD_BENCHMARKS "Build benchmarks" ON)
 option(LQCS_ENABLE_OPENMP "Enable OpenMP parallel kernels" ON)
+option(LQCS_ENABLE_AVX2 "Enable AVX2+FMA SIMD kernels (x86-64)" ON)
 
 add_library(lqcs STATIC
     src/algorithms/arithmetic.cpp
@@ -55,6 +56,23 @@ else()
 endif()
 # 静态库可能被链接进 Python 扩展（共享库）
 set_target_properties(lqcs PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# AVX2+FMA：启用显式 SIMD 内核（定义 __AVX2__）并放开编译器自动向量化。
+# 注意：开启后产物要求支持 AVX2 的 CPU（2013 年后绝大多数 x86-64）。
+if(LQCS_ENABLE_AVX2)
+    include(CheckCXXCompilerFlag)
+    if(MSVC)
+        check_cxx_compiler_flag("/arch:AVX2" LQCS_HAS_MSVC_AVX2)
+        if(LQCS_HAS_MSVC_AVX2)
+            target_compile_options(lqcs PRIVATE /arch:AVX2)
+        endif()
+    else()
+        check_cxx_compiler_flag("-mavx2 -mfma" LQCS_HAS_AVX2)
+        if(LQCS_HAS_AVX2)
+            target_compile_options(lqcs PRIVATE -mavx2 -mfma)
+        endif()
+    endif()
+endif()
 
 if(LQCS_ENABLE_OPENMP)
     find_package(OpenMP)
